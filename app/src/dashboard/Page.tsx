@@ -1,0 +1,6 @@
+// src/dashboard/Dashboard.js
+import React from "react";
+
+export default function Dashboard() {
+  return <h2>Dashboard funcionando ✅</h2>;
+}
