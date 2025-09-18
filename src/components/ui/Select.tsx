@@ -9,8 +9,21 @@ export function Select({ children, onValueChange }: SelectProps) {
   return <div>{React.Children.map(children, (child) => child)}</div>
 }
 
-export function SelectTrigger({ children }: { children: React.ReactNode }) {
-  return <div className="border p-2 rounded cursor-pointer">{children}</div>
+interface SelectTriggerProps {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}
+
+export function SelectTrigger({ children, className, onClick }: SelectTriggerProps) {
+  return (
+    <div
+      onClick={onClick}
+      className={`border p-2 rounded cursor-pointer ${className || ""}`}
+    >
+      {children}
+    </div>
+  )
 }
 
 export function SelectValue({ placeholder }: { placeholder?: string }) {
