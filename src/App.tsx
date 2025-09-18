@@ -6,7 +6,6 @@ import Home from "./home/page";
 import Dashboard from "./pages/dashboard/page";
 import Login from "./pages/auth/login/page";
 import Register from "./pages/auth/register/page";
-import Trips from "./pages/trips/page";
 import './App.css'
 
 
@@ -20,7 +19,6 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/trips" element={<Trips />} />
         </Routes>
       </Layout>
     </Router>
