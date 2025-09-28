@@ -79,14 +79,23 @@ export const AuthApi = {
   },
 
   // Register new user
-  register: async (userName: string, email: string, password: string) => {
-    const response = await api.post("/Auth/Register", {
-      userName,
-      email,
-      password,
-    })
-    return response.data
-  },
+  register: async (
+  userName: string,
+  email: string,
+  password: string,
+  countryOfOrigin: string,
+  preferredLanguage: string
+) => {
+  const response = await api.post("/Auth/Register", {
+    UserName: userName,          
+    Email: email,                
+    Password: password,         
+    CountryOfOrigin: countryOfOrigin,
+    PreferredLanguage: preferredLanguage,
+  })
+  return response.data
+},
+
 
   // Get current user (example protected endpoint)
   getUser: async (userId: number) => {

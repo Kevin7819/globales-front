@@ -43,10 +43,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 mb-4">
-            <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
-          </Link>
+
           <div className="flex items-center justify-center gap-2 mb-4">
             <Globe className="h-8 w-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Orbis</h1>
