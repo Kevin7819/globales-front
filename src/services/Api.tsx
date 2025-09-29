@@ -1,8 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
-// -------------------------
-// Axios instance
-// -------------------------
 const Api: AxiosInstance = axios.create({
   baseURL: "http://localhost:5089/Api",
   headers: { "Content-Type": "application/json" },
@@ -34,7 +31,7 @@ Api.interceptors.response.use(
       const status = error.response.status;
       if (status === 401) {
         console.warn("Unauthorized → JWT may be invalid or expired.");
-        // window.location.href = "/login"
+        window.location.href = "/login"
       }
       if (status === 403) {
         console.error("Forbidden → User does not have permission.");

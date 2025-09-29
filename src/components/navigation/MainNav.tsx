@@ -1,12 +1,29 @@
-// src/components/navigation/MainNav.tsx
 import React from "react"
+import { NavLink } from "react-router-dom"
 
 export const MainNav: React.FC = () => (
-  <nav>
-    <ul className="flex gap-4">
-      <li><a href="/home" className="text-gray-700 hover:text-blue-600">Home</a></li>
-      <li><a href="/dashboard" className="text-gray-700 hover:text-blue-600">Dashboard</a></li>
-      <li><a href="/profile" className="text-gray-700 hover:text-blue-600">Profile</a></li>
+  <nav className="bg-white shadow p-4">
+    <ul className="flex gap-6">
+      <li>
+        <NavLink
+          to="/dashboard"
+          className={({ isActive }) =>
+            isActive ? "text-blue-600 font-semibold" : "text-gray-700 hover:text-blue-600"
+          }
+        >
+          Dashboard
+        </NavLink>
+      </li>
+      <li>
+        <NavLink
+          to="/profilePage"
+          className={({ isActive }) =>
+            isActive ? "text-blue-600 font-semibold" : "text-gray-700 hover:text-blue-600"
+          }
+        >
+          Profile
+        </NavLink>
+      </li>
     </ul>
   </nav>
 )

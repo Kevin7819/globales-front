@@ -23,7 +23,6 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
     setIsOpen(false)
   }
 
-  // Función recursiva para procesar elementos anidados
   const processChildren = (children: ReactNode, depth = 0): ReactNode => {
     return React.Children.map(children, (child) => {
       if (!React.isValidElement(child)) return child
@@ -55,7 +54,6 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
         return React.cloneElement(element, { selectedValue: value, onSelect: handleSelect })
       }
 
-      // Para cualquier otro elemento, procesar sus hijos recursivamente
       if (props.children) {
         return React.cloneElement(element, {
           ...props,
@@ -74,7 +72,6 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
   )
 }
 
-// ---------------- Trigger ----------------
 interface SelectTriggerProps {
   children: ReactNode
   isOpen?: boolean
@@ -97,14 +94,12 @@ export function SelectTrigger({ children, isOpen, setIsOpen, className }: Select
 }
 SelectTrigger.displayName = "SelectTrigger"
 
-// ---------------- Value ----------------
 export function SelectValue({ selectedValue, placeholder }: { selectedValue?: string; placeholder?: string }) {
   console.log("[SelectValue] rendering, selectedValue:", selectedValue)
   return <span>{selectedValue || placeholder}</span>
 }
 SelectValue.displayName = "SelectValue"
 
-// ---------------- Content ----------------
 export function SelectContent({ children, isOpen }: { children: ReactNode; isOpen?: boolean }) {
   console.log("[SelectContent] rendering, isOpen:", isOpen)
   if (!isOpen) return null
@@ -116,7 +111,6 @@ export function SelectContent({ children, isOpen }: { children: ReactNode; isOpe
 }
 SelectContent.displayName = "SelectContent"
 
-// ---------------- Item ----------------
 export function SelectItem({
   value,
   children,
