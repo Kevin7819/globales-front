@@ -22,12 +22,12 @@ export default function Layout({ children }: Props) {
       </nav>
 
       {/* Page Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
+      <main >
         {children}
       </main>
 
       {/* Footer */}
-      <footer className="bg-gray-100 border-t mt-6">
+      <footer>
         <div className="max-w-7xl mx-auto px-6 py-4 text-center text-gray-600 text-sm">
           © 2025 Globales — Todos los derechos reservados
         </div>
