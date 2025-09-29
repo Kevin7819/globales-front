@@ -5,9 +5,9 @@ import { Input } from "../../../components/ui/Input"
 import { Label } from "../../../components/ui/Label"
 import { Separator } from "../../../components/ui/Separator"
 import { Globe, Mail, Lock } from "lucide-react"
-import { AuthApi } from "../../../services/api"
+import { AuthApi } from "../../../services/AuthApi"
 import { useEffect, useState } from "react"
-import { fetchCountries, fetchLanguages } from "../../../services/locationApi"
+import { fetchCountries, fetchLanguages } from "../../../services/LocationApi"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/Select"
 
 export default function RegisterPage() {

@@ -6,7 +6,7 @@ import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Separator } from "../../../components/ui/Separator";
 import { Globe, User, Lock, ArrowLeft } from "lucide-react";
-import { AuthApi } from "../../../services/api";
+import { AuthApi } from "../../../services/AuthApi";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -17,24 +17,24 @@ export default function LoginPage() {
 
   //  Función de login
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); // Evita que el formulario se recargue al hacer submit
+    e.preventDefault(); 
 
-    console.log("📌 Intentando iniciar sesión con:", { username, password }); // Log de datos ingresados
+    console.log("Intentando iniciar sesión con:", { username, password }); 
 
     try {
-      const result = await AuthApi.login(username, password); // Llamada al API de login
-      console.log(" Respuesta del API:", result); // Log de respuesta completa
+      const result = await AuthApi.login(username, password); 
+      console.log(" Respuesta del API:", result); 
 
       if (result.isSuccess) {
         console.log(" Login exitoso, redirigiendo a /dashboard");
-        navigate("/dashboard"); // Navega al dashboard
+        navigate("/dashboard"); 
       } else {
         console.warn(" Login fallido:", result.message);
-        alert(result.message); // Alerta al usuario
+        alert(result.message);
       }
     } catch (err) {
       console.error(" Error al llamar al API de login:", err);
-      alert("Error al iniciar sesión"); // Alerta genérica
+      alert("Error al iniciar sesión");
     }
   };
 
