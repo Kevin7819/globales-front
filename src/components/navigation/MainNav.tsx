@@ -1,6 +1,7 @@
 import React from "react"
 import { NavLink } from "react-router-dom"
 
+
 export const MainNav: React.FC = () => (
   <nav className="bg-white shadow p-4">
     <ul className="flex gap-6">
