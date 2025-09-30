@@ -1,105 +1,129 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { User, UserApi } from "../../services/UserApi"
+import { fetchCountries, fetchLanguages } from "../../services/LocationApi"
 
 export default function ProfilePage() {
-  const [isEditing, setIsEditing] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
-  const [error, setError] = useState("")
-  const [success, setSuccess] = useState("")
+    const [isEditing, setIsEditing] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
+    const [error, setError] = useState("")
+    const [success, setSuccess] = useState("")
 
-  const [user, setUser] = useState({
-    name: "Juan Pérez",
-    email: "juan@email.com",
-    phone: "+52 555 123 4567",
-    country: "México",
-    city: "Ciudad de México",
-    travelType: "Negocios",
-    bio: "Ejecutivo de ventas que viaja frecuentemente por trabajo. Me gusta explorar la cultura local y probar nuevas comidas.",
-    avatar: "/generic-user-avatar.png",
-    preferences: {
-      notifications: true,
-      culturalAlerts: true,
-      healthAlerts: true,
-      language: "es"
-    }
-  })
+    const [user, setUser] = useState<User | null>(null)
+    const [editedUser, setEditedUser] = useState<User | null>(null)
 
-  const [editedUser, setEditedUser] = useState({ ...user })
+    const [countries, setCountries] = useState<string[]>([])
+    const [languages, setLanguages] = useState<string[]>([])
 
-  const countries = [
-    "México", "Estados Unidos", "Canadá", "España", "Francia", "Alemania", 
-    "Reino Unido", "Italia", "Brasil", "Argentina", "Colombia", "Chile"
-  ]
+    const travelTypes = ["Negocios", "Turismo", "Estudios", "Familia", "Médico", "Otro"]
 
-  const travelTypes = ["Negocios", "Turismo", "Estudios", "Familia", "Médico", "Otro"]
-  const languages = [
-    { code: "es", name: "Español" },
-    { code: "en", name: "English" },
-    { code: "fr", name: "Français" },
-    { code: "pt", name: "Português" }
-  ]
+    useEffect(() => {
+      const loadData = async () => {
+        setIsLoading(true)
+        setError("")
 
-  const handleEdit = () => {
-    setIsEditing(true)
-    setError("")
-    setSuccess("")
-  }
-
-  const handleCancel = () => {
-    setEditedUser({ ...user })
-    setIsEditing(false)
-    setError("")
-    setSuccess("")
-  }
-
-  const handleSave = async () => {
-    setIsSaving(true)
-    setError("")
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      setUser({ ...editedUser })
-      setIsEditing(false)
-      setSuccess("Perfil actualizado exitosamente")
-      
-      setTimeout(() => setSuccess(""), 3000)
-      
-    } catch (err) {
-      setError("Error al actualizar el perfil. Intenta nuevamente.")
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
-  const handleLogout = async () => {
-    setIsLoading(true)
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      alert("Sesión cerrada exitosamente")
-    } catch (err) {
-      setError("Error al cerrar sesión")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleInputChange = (field: string, value: string | boolean) => {
-    if (field.includes('.')) {
-      const [parent, child] = field.split('.')
-      if (parent === 'preferences') {
-        setEditedUser(prev => ({
-          ...prev,
-          preferences: {
-            ...prev.preferences,
-            [child]: value
+        try {
+          const userId = localStorage.getItem("userId")
+          if (!userId) {
+            setError("No active session found")
+            window.location.href = "/login"
+            return
           }
-        }))
+
+          // Cargar todo en paralelo
+          const [countriesList, languagesList, userData] = await Promise.all([
+            fetchCountries(),
+            fetchLanguages(),
+            UserApi.getCurrentUser(Number(userId)),
+          ])
+
+          setCountries(countriesList)
+          setLanguages(languagesList)
+
+          setUser(userData)
+          setEditedUser(userData)
+        } catch (err) {
+          console.error("Error loading profile:", err)
+          setError("Could not load profile. Please try again.")
+        } finally {
+          setIsLoading(false)
+        }
       }
-    } else {
-      setEditedUser(prev => ({ ...prev, [field]: value }))
+
+      loadData()
+    }, [])
+
+    const handleEdit = () => {
+      setIsEditing(true)
+      setError("")
+      setSuccess("")
     }
+
+    const handleCancel = () => {
+      if (user) setEditedUser({ ...user })
+      setIsEditing(false)
+      setError("")
+      setSuccess("")
+    }
+
+    const handleSave = async () => {
+      if (!editedUser || !user) return
+      setIsSaving(true)
+      setError("")
+      setSuccess("")
+
+      try {
+        await UserApi.updateUser(user.userId, editedUser)
+        setUser({ ...editedUser })
+        setIsEditing(false)
+        setSuccess("Profile updated successfully")
+        setTimeout(() => setSuccess(""), 3000)
+      } catch (err: any) {
+        console.error("Error updating profile:", err)
+        setError(err.message || "Error updating profile")
+      } finally {
+        setIsSaving(false)
+      }
+    }
+
+    const handleLogout = () => {
+      localStorage.removeItem("token")
+      localStorage.removeItem("userId")
+      localStorage.removeItem("role")
+      window.location.href = "/login"
+    }
+
+    const handleInputChange = (field: keyof User, value: any) => {
+      if (!editedUser) return
+      setEditedUser((prev) => ({ ...prev!, [field]: value }))
+    }
+
+    // Pantalla de carga
+    if (isLoading) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600">Loading profile...</p>
+          </div>
+        </div>
+      )
+    }
+
+
+  if (!user || !editedUser) {
+    return null
   }
+
+const userInitials = user.name
+  ? user.name
+      .split(' ')
+      .map((n: string) => n[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2)
+  : "US"
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,8 +147,8 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4">
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded">Notificaciones</button>
               <button className="p-2 text-gray-600 hover:bg-gray-100 rounded">Ajustes</button>
-              <div className="h-8 w-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-medium">
-                JP
+              <div className="h-8 w-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-sm font-medium text-white">
+                {userInitials}
               </div>
             </div>
           </div>
@@ -134,9 +158,9 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6">
-          <button className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:bg-gray-100 rounded">
+          <a href="/dashboard" className="flex items-center gap-2 px-3 py-1 text-gray-600 hover:bg-gray-100 rounded">
             ← Volver al Dashboard
-          </button>
+          </a>
         </div>
 
         {/* Header Section */}
@@ -191,18 +215,13 @@ export default function ProfilePage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border p-6 text-center">
               <div className="relative inline-block mb-4">
-                <div className="h-32 w-32 bg-gray-300 rounded-full mx-auto flex items-center justify-center text-2xl font-medium text-gray-600">
-                  JP
+                <div className="h-32 w-32 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full mx-auto flex items-center justify-center text-3xl font-bold text-white shadow-lg">
+                  {userInitials}
                 </div>
-                {isEditing && (
-                  <button className="absolute bottom-0 right-0 bg-white border border-gray-300 rounded-full h-8 w-8 flex items-center justify-center hover:bg-gray-50">
-                    
-                  </button>
-                )}
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{user.name}</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{user.name || "Usuario"}</h2>
               <p className="text-gray-600 mb-4">{user.email}</p>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 mb-4">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-4">
                 Viajero {user.travelType}
               </span>
 
@@ -210,15 +229,15 @@ export default function ProfilePage() {
               <div className="border-t pt-4 mt-4">
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-2xl font-bold text-blue-600">12</div>
+                    <div className="text-2xl font-bold text-blue-600">0</div>
                     <div className="text-xs text-gray-600">Países</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-green-600">8</div>
+                    <div className="text-2xl font-bold text-green-600">0</div>
                     <div className="text-xs text-gray-600">Viajes</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-purple-600">87%</div>
+                    <div className="text-2xl font-bold text-purple-600">0%</div>
                     <div className="text-xs text-gray-600">Prep.</div>
                   </div>
                 </div>
@@ -233,10 +252,9 @@ export default function ProfilePage() {
               </p>
               <button
                 onClick={handleLogout}
-                disabled={isLoading}
-                className="w-full border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2"
               >
-                {isLoading ? "Cerrando sesión..." : "Cerrar Sesión"}
+                Cerrar Sesión
               </button>
             </div>
           </div>
@@ -246,8 +264,8 @@ export default function ProfilePage() {
             {/* Personal Information */}
             <div className="bg-white rounded-lg shadow-sm border">
               <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  👤 Información Personal
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Información Personal
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
                   Datos básicos de tu perfil
@@ -267,7 +285,7 @@ export default function ProfilePage() {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     ) : (
-                      <p className="py-2 text-gray-900">{user.name}</p>
+                      <p className="py-2 text-gray-900">{user.name || "No especificado"}</p>
                     )}
                   </div>
                   <div>
@@ -285,207 +303,65 @@ export default function ProfilePage() {
                       <p className="py-2 text-gray-900">{user.email}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Teléfono
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        value={editedUser.phone}
-                        onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="py-2 text-gray-900">{user.phone}</p>
-                    )}
-                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       País
                     </label>
                     {isEditing ? (
                       <select
-                        value={editedUser.country}
-                        onChange={(e) => handleInputChange('country', e.target.value)}
+                        value={editedUser.countryOfOrigin}
+                        onChange={(e) => handleInputChange('countryOfOrigin', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        {countries.map(country => (
-                          <option key={country} value={country}>
-                            {country}
+                        <option value="">Seleccionar país</option>
+                        {countries.map(countryOfOrigin => (
+                          <option key={countryOfOrigin} value={countryOfOrigin}>
+                            {countryOfOrigin}
                           </option>
                         ))}
                       </select>
                     ) : (
-                      <p className="py-2 text-gray-900">{user.country}</p>
+                      <p className="py-2 text-gray-900">{user.countryOfOrigin || "No especificado"}</p>
                     )}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ciudad
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        value={editedUser.city}
-                        onChange={(e) => handleInputChange('city', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    ) : (
-                      <p className="py-2 text-gray-900">{user.city}</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tipo de viaje principal
-                    </label>
-                    {isEditing ? (
-                      <select
-                        value={editedUser.travelType}
-                        onChange={(e) => handleInputChange('travelType', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        {travelTypes.map(type => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <p className="py-2 text-gray-900">{user.travelType}</p>
-                    )}
-                  </div>
+                  
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Biografía
-                  </label>
-                  {isEditing ? (
-                    <textarea
-                      rows={3}
-                      value={editedUser.bio}
-                      onChange={(e) => handleInputChange('bio', e.target.value)}
-                      placeholder="Cuéntanos un poco sobre ti y tus intereses de viaje..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                    />
-                  ) : (
-                    <p className="py-2 text-gray-900">{user.bio}</p>
-                  )}
-                </div>
+                
               </div>
             </div>
 
             {/* Preferences */}
             <div className="bg-white rounded-lg shadow-sm border">
               <div className="p-6 border-b">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    Preferencias
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Preferencias
                 </h3>
                 <p className="text-gray-600 text-sm mt-1">
-                  Configura tus preferencias de notificaciones y idioma
+                  Configura tu idioma preferido
                 </p>
               </div>
               <div className="p-6 space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Idioma
+                    Idioma preferido
                   </label>
                   {isEditing ? (
                     <select
-                      value={editedUser.preferences.language}
-                      onChange={(e) => handleInputChange('preferences.language', e.target.value)}
+                      value={editedUser.preferredLanguage}
+                      onChange={(e) => handleInputChange('preferredLanguage', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
+                      <option value="">Seleccionar idioma</option>
                       {languages.map(lang => (
-                        <option key={lang.code} value={lang.code}>
-                          {lang.name}
+                        <option key={lang} value={lang}>
+                          {lang}
                         </option>
                       ))}
                     </select>
                   ) : (
-                    <p className="py-2 text-gray-900">
-                      {languages.find(l => l.code === user.preferences.language)?.name}
-                    </p>
+                    <p className="py-2 text-gray-900">{user.preferredLanguage || "No especificado"}</p>
                   )}
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="font-medium text-gray-900">Notificaciones</h4>
-
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <label className="font-medium text-gray-700">Notificaciones generales</label>
-                      <p className="text-sm text-gray-600">
-                        Recibe actualizaciones sobre tus viajes
-                      </p>
-                    </div>
-                    {isEditing ? (
-                      <input
-                        type="checkbox"
-                        checked={editedUser.preferences.notifications}
-                        onChange={(e) => handleInputChange('preferences.notifications', e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.preferences.notifications 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.preferences.notifications ? "Activo" : "Inactivo"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <label className="font-medium text-gray-700">Alertas de salud</label>
-                      <p className="text-sm text-gray-600">
-                        Recomendaciones médicas para tus destinos
-                      </p>
-                    </div>
-                    {isEditing ? (
-                      <input
-                        type="checkbox"
-                        checked={editedUser.preferences.healthAlerts}
-                        onChange={(e) => handleInputChange('preferences.healthAlerts', e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.preferences.healthAlerts 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.preferences.healthAlerts ? "Activo" : "Inactivo"}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between py-2">
-                    <div>
-                      <label className="font-medium text-gray-700">Alertas culturales</label>
-                      <p className="text-sm text-gray-600">
-                        Tips culturales y de etiqueta
-                      </p>
-                    </div>
-                    {isEditing ? (
-                      <input
-                        type="checkbox"
-                        checked={editedUser.preferences.culturalAlerts}
-                        onChange={(e) => handleInputChange('preferences.culturalAlerts', e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      />
-                    ) : (
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        user.preferences.culturalAlerts 
-                          ? 'bg-blue-100 text-blue-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {user.preferences.culturalAlerts ? "Activo" : "Inactivo"}
-                      </span>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>

@@ -6,8 +6,8 @@ import { Label } from "../../../components/ui/Label"
 import { Separator } from "../../../components/ui/Separator"
 import { Globe, Mail, Lock, Calendar } from "lucide-react"
 import { AuthApi } from "../../../services/AuthApi"
-import { useEffect, useState } from "react"
 import { fetchCountries, fetchLanguages } from "../../../services/LocationApi"
+import { useEffect, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/Select"
 
 export default function RegisterPage() {

@@ -1,32 +1,16 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import { Button } from "../../components/ui/Button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/Card"
 import { Badge } from "../../components/ui/Badge"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/Avatar"
 import { Progress } from "../../components/ui/Progress"
-import {
-  MapPin,
-  Calendar,
-  Shield,
-  Heart,
-  MessageCircle,
-  Bell,
-  Settings,
-  Plane,
-  Globe,
-  AlertTriangle,
-  Clock,
-} from "lucide-react"
+import { MapPin, Calendar, Shield, Heart, MessageCircle, Bell, Settings, Plane, Globe, AlertTriangle, Clock } from "lucide-react"
+import { User, UserApi } from "../../services/UserApi"
 
 export default function DashboardPage() {
-  const [user] = useState({
-    name: "Juan Pérez",
-    email: "juan@email.com",
-    country: "México",
-    travelType: "Negocios",
-    avatar: "/generic-user-avatar.png",
-  })
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
 
   const [upcomingTrips] = useState([
     {
@@ -68,6 +52,38 @@ export default function DashboardPage() {
     },
   ])
 
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        // Obtén el id guardado en localStorage después del login
+        const storedUserId = localStorage.getItem("userId")
+        if (!storedUserId) {
+          throw new Error("No user ID found in localStorage")
+        }
+
+        const userData = await UserApi.getCurrentUser(Number(storedUserId))
+        setUser(userData)
+      } catch (err) {
+        console.error("Failed to fetch user:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchUser()
+  }, [])
+
+  if (loading) {
+    return <div className="p-8 text-center text-gray-500">Loading user...</div>
+  }
+
+  if (!user) {
+    return <div className="p-8 text-center text-red-500">User not found</div>
+  }
+
+  const userInitials = user.name
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().substring(0, 2)
+    : "US"
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
@@ -102,8 +118,8 @@ export default function DashboardPage() {
                 <Settings className="h-4 w-4" />
               </Button>
               <Avatar>
-                <AvatarImage src={user.avatar || "/placeholder.svg"}  />
-                <AvatarFallback>JP</AvatarFallback>
+                <AvatarImage src={user.avatar || "/placeholder.svg"} />
+                <AvatarFallback>{userInitials}</AvatarFallback>
               </Avatar>
             </div>
           </div>
@@ -239,8 +255,8 @@ export default function DashboardPage() {
               <CardContent>
                 <div className="flex items-center gap-3 mb-4">
                   <Avatar className="h-12 w-12">
-                    <AvatarImage src={user.avatar || "/placeholder.svg"}  />
-                    <AvatarFallback>JP</AvatarFallback>
+                    <AvatarImage src={user.avatar || "/generic-user-avatar.png"} />
+                    <AvatarFallback>{userInitials}</AvatarFallback>
                   </Avatar>
                   <div>
                     <h3 className="font-semibold">{user.name}</h3>
@@ -250,11 +266,11 @@ export default function DashboardPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-300">País:</span>
-                    <span>{user.country}</span>
+                    <span>{user.countryOfOrigin || "No especificado"}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Tipo de viaje:</span>
-                    <span>{user.travelType}</span>
+                    <span className="text-gray-600 dark:text-gray-300">Idioma:</span>
+                    <span>{user.preferredLanguage || "No especificado"}</span>
                   </div>
                 </div>
                 <Button variant="outline" size="sm" className="w-full mt-4 bg-transparent" asChild>

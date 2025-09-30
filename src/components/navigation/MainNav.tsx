@@ -16,7 +16,7 @@ export const MainNav: React.FC = () => (
       </li>
       <li>
         <NavLink
-          to="/profilePage"
+          to="/profile"
           className={({ isActive }) =>
             isActive ? "text-blue-600 font-semibold" : "text-gray-700 hover:text-blue-600"
           }
