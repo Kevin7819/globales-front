@@ -1,7 +1,6 @@
 import * as React from "react"
 import clsx from "clsx"
 
-// Card principal
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   asChild?: boolean
 }

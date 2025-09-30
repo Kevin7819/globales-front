@@ -77,7 +77,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2">
                 <Globe className="h-6 w-6 text-blue-600" />
-                <span className="font-bold text-gray-900 dark:text-white">Se tiene que pensar</span>
+                <span className="font-bold text-gray-900 dark:text-white">Orbis</span>
               </Link>
               <nav className="hidden md:flex items-center gap-6 ml-8">
                 <Link to="/dashboard" className="text-blue-600 font-medium">
