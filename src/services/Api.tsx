@@ -6,9 +6,7 @@ const Api: AxiosInstance = axios.create({
   timeout: 10000,
 });
 
-// -------------------------
 // Request interceptor: add JWT token
-// -------------------------
 Api.interceptors.request.use(
   (config: InternalAxiosRequestConfig): InternalAxiosRequestConfig => {
     const token = localStorage.getItem("token");
@@ -21,9 +19,7 @@ Api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// -------------------------
 // Response interceptor: handle global errors
-// -------------------------
 Api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error) => {
