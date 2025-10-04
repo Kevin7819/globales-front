@@ -1,29 +1,23 @@
-// src/components/ui/Dialog.tsx
 import React, { useState, ReactNode, cloneElement, isValidElement } from "react";
 
-// Props for the Dialog container
 interface DialogProps {
   children: ReactNode;
 }
 
-// Props for the DialogTrigger button
 interface DialogTriggerProps {
   children: ReactNode;
   onClick?: () => void;
 }
 
-// Props for the DialogContent container
 interface DialogContentProps {
   children: ReactNode;
   className?: string;
 }
 
-// Props for the DialogTitle
 interface DialogTitleProps {
   children: ReactNode;
 }
 
-// Context to share open state
 const DialogContext = React.createContext<{
   open: boolean;
   setOpen: React.Dispatch<React.SetStateAction<boolean>>;

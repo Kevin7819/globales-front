@@ -1,4 +1,3 @@
-// src/components/ui/Avatar.tsx
 import React from "react"
 
 interface AvatarProps {

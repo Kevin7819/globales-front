@@ -1,4 +1,3 @@
-// src/components/ui/Tabs.tsx
 import React, { useState } from "react"
 
 interface TabsProps {
