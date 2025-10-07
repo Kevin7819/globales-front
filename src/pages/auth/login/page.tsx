@@ -5,35 +5,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../../components/ui/Input";
 import { Label } from "../../../components/ui/Label";
 import { Separator } from "../../../components/ui/Separator";
-import { Globe, User, Lock, ArrowLeft } from "lucide-react";
+import { Globe, User, Lock } from "lucide-react";
 import { AuthApi } from "../../../services/AuthApi";
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
-  //  Estados para username y password
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  //  Función de login
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); 
+    e.preventDefault();
 
-    console.log("Intentando iniciar sesión con:", { username, password }); 
+    console.log("Intentando iniciar sesión con:", { email, password });
 
     try {
-      const result = await AuthApi.login(username, password); 
-      console.log(" Respuesta del API:", result); 
+      const result = await AuthApi.login(email, password);
+      console.log("Respuesta del API:", result);
 
       if (result.isSuccess) {
-        console.log(" Login exitoso, redirigiendo a /dashboard");
-        navigate("/dashboard"); 
+        console.log("Login exitoso, redirigiendo a /dashboard");
+        localStorage.setItem("token", result.user.token);
+        localStorage.setItem("userId", result.user.id.toString());
+        navigate("/dashboard");
       } else {
-        console.warn(" Login fallido:", result.message);
+        console.warn("Login fallido:", result.message);
         alert(result.message);
       }
     } catch (err) {
-      console.error(" Error al llamar al API de login:", err);
+      console.error("Error al llamar al API de login:", err);
       alert("Error al iniciar sesión");
     }
   };
@@ -43,7 +43,6 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-
           <div className="flex items-center justify-center gap-2 mb-4">
             <Globe className="h-8 w-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Orbis</h1>
@@ -59,18 +58,18 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
-              {/* Username */}
+              {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="username">Nombre de usuario</Label>
+                <Label htmlFor="email">Correo electrónico</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                   <Input
-                    id="username"
-                    type="text"
-                    placeholder="Tu nombre de usuario"
+                    id="email"
+                    type="email"
+                    placeholder="correo@ejemplo.com"
                     className="pl-10"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
@@ -91,17 +90,6 @@ export default function LoginPage() {
                     required
                   />
                 </div>
-              </div>
-
-              {/* Recordarme y Olvidé contraseña */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center space-x-2 text-sm">
-                  <input type="checkbox" className="rounded border-gray-300" />
-                  <span className="text-gray-600 dark:text-gray-300">Recordarme</span>
-                </label>
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-700">
-                  ¿Olvidaste tu contraseña?
-                </Link>
               </div>
 
               <Button type="submit" className="w-full" size="lg">

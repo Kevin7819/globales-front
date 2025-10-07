@@ -1,9 +1,9 @@
 import Api from "./Api";
 
 export const AuthApi = {
-  // Login user
-  login: async (userName: string, password: string) => {
-    const response = await Api.post("/Auth/Login", { userName, password });
+  // Login user using email
+  login: async (email: string, password: string) => {
+    const response = await Api.post("/Auth/Login", { email, password });
 
     if (response.data.isSuccess) {
       localStorage.setItem("token", response.data.user.token);
@@ -39,7 +39,6 @@ export const AuthApi = {
 
     return response.data;
   },
-
 
   // Get current user
   getUser: async (userId: number) => {

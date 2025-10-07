@@ -14,11 +14,10 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    console.log("[Select] value changed ->", value)
+
   }, [value])
 
   const handleSelect = (val: string) => {
-    console.log("[Select] handleSelect:", val)
     if (onValueChange) onValueChange(val)
     setIsOpen(false)
   }
@@ -29,7 +28,6 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
       const element = child as SelectElement
       const props = element.props || {}
 
-      console.log(`[Select] processing child (depth ${depth}):`, element.type.displayName, props)
 
       if (element.type.displayName === "SelectTrigger") {
         return React.cloneElement(element, { 
@@ -83,7 +81,6 @@ export function SelectTrigger({ children, isOpen, setIsOpen, className }: Select
   return (
     <div
       onClick={() => {
-        console.log("[SelectTrigger] clicked, isOpen:", isOpen)
         setIsOpen && setIsOpen(!isOpen)
       }}
       className={`border p-2 rounded cursor-pointer bg-white ${className || ""}`}
@@ -95,13 +92,11 @@ export function SelectTrigger({ children, isOpen, setIsOpen, className }: Select
 SelectTrigger.displayName = "SelectTrigger"
 
 export function SelectValue({ selectedValue, placeholder }: { selectedValue?: string; placeholder?: string }) {
-  console.log("[SelectValue] rendering, selectedValue:", selectedValue)
   return <span>{selectedValue || placeholder}</span>
 }
 SelectValue.displayName = "SelectValue"
 
 export function SelectContent({ children, isOpen }: { children: ReactNode; isOpen?: boolean }) {
-  console.log("[SelectContent] rendering, isOpen:", isOpen)
   if (!isOpen) return null
   return (
     <div className="border mt-1 rounded bg-white absolute w-full z-10 max-h-60 overflow-y-auto">
@@ -122,11 +117,9 @@ export function SelectItem({
   onSelect?: (value: string) => void
   selectedValue?: string
 }) {
-  console.log("[SelectItem] rendering:", value, "selectedValue:", selectedValue)
   return (
     <div
       onClick={() => {
-        console.log("[SelectItem] clicked:", value)
         if (onSelect) onSelect(value)
       }}
       className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedValue === value ? "bg-blue-100 font-medium" : ""}`}
