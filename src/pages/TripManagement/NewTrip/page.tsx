@@ -1,12 +1,24 @@
 import { useEffect, useState } from "react";
-import { Card,CardContent,CardHeader,CardTitle,CardDescription} from "../../../components/ui/Card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardDescription,
+} from "../../../components/ui/Card";
 import { Label } from "../../../components/ui/Label";
 import { Input } from "../../../components/ui/Input";
 import { Button } from "../../../components/ui/Button";
-import {Select,SelectContent,SelectItem,SelectTrigger,SelectValue} from "../../../components/ui/Select";
-import { Calendar, PlaneTakeoff } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../../../components/ui/Select";
+import { PlaneTakeoff } from "lucide-react";
 import { fetchCountries } from "../../../services/LocationApi";
 import { TripApi } from "../../../services/TripApi";
+import { useNavigate } from "react-router-dom";
 
 export default function NewTripPage() {
   const [formData, setFormData] = useState({
@@ -14,7 +26,7 @@ export default function NewTripPage() {
     destination: "",
     departureDate: "",
     returnDate: "",
-    type: "Personal", // valor por defecto (puedes cambiarlo)
+    type: "Personal",
   });
 
   const [countries, setCountries] = useState<string[]>([]);
@@ -22,8 +34,8 @@ export default function NewTripPage() {
   const [loading, setLoading] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
+  const navigate = useNavigate();
 
-  // --- Cargar países desde el API ---
   useEffect(() => {
     const loadCountries = async () => {
       try {
@@ -38,7 +50,6 @@ export default function NewTripPage() {
     loadCountries();
   }, []);
 
-  // --- Manejadores ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -50,53 +61,20 @@ export default function NewTripPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.flightNumber.trim()) {
-      alert("Por favor ingresa el número de vuelo");
-      return;
-    }
-    if (!formData.destination) {
-      alert("Por favor selecciona el país de destino");
-      return;
-    }
-    if (!formData.departureDate) {
-      alert("Por favor selecciona la fecha de salida");
-      return;
-    }
-    if (!formData.returnDate) {
-      alert("Por favor selecciona la fecha de regreso");
-      return;
-    }
+    if (!formData.flightNumber.trim()) return alert("Por favor ingresa el número de vuelo");
+    if (!formData.destination) return alert("Por favor selecciona el país de destino");
+    if (!formData.departureDate) return alert("Por favor selecciona la fecha de salida");
+    if (!formData.returnDate) return alert("Por favor selecciona la fecha de regreso");
 
     const dep = new Date(formData.departureDate);
     const ret = new Date(formData.returnDate);
-    if (dep > ret) {
-      alert("La fecha de regreso no puede ser anterior a la de salida");
-      return;
-    }
+    if (dep > ret) return alert("La fecha de regreso no puede ser anterior a la de salida");
 
     try {
       setLoading(true);
-
-      // --- Construir objeto para el backend ---
-      const payload = {
-        destination: formData.destination,
-        departureDate: formData.departureDate,
-        returnDate: formData.returnDate,
-        flightNumber: formData.flightNumber,
-        type: formData.type,
-      };
-
-      await TripApi.createTrip(payload);
+      await TripApi.createTrip(formData);
       alert("Viaje creado correctamente");
-
-      // Reiniciar formulario
-      setFormData({
-        flightNumber: "",
-        destination: "",
-        departureDate: "",
-        returnDate: "",
-        type: "Personal",
-      });
+      navigate("/trips", { state: { created: true } });
     } catch (error) {
       console.error("[NewTripPage] Error al crear viaje:", error);
       alert("Error al crear el viaje. Inténtalo nuevamente.");
@@ -106,130 +84,119 @@ export default function NewTripPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="flex justify-center items-center min-h p-4 bg-gray-50 dark:bg-gray-900">
+      <Card className="w-full max-w-md shadow-xl rounded-2xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <PlaneTakeoff className="h-8 w-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <CardHeader className="text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <PlaneTakeoff className="h-6 w-6 text-blue-600" />
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white">
               Nuevo Viaje
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-300">
-            Registra los detalles de tu próximo vuelo
-          </p>
-        </div>
+          <CardDescription>
+            Completa la información de tu próximo vuelo
+          </CardDescription>
+        </CardHeader>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Registrar Viaje</CardTitle>
-            <CardDescription>Completa la información del vuelo</CardDescription>
-          </CardHeader>
+        {/* Form */}
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Flight Number */}
+            <div className="space-y-1">
+              <Label htmlFor="flightNumber">Número de vuelo</Label>
+              <Input
+                id="flightNumber"
+                name="flightNumber"
+                placeholder="AA1234"
+                value={formData.flightNumber}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Número de vuelo */}
-              <div className="space-y-2">
-                <Label htmlFor="flightNumber">Número de vuelo</Label>
+            {/* Destination */}
+            <div className="space-y-1">
+              <Label htmlFor="destination">País de destino</Label>
+              <Select
+                value={formData.destination}
+                onValueChange={handleCountryChange}
+                disabled={loadingData}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona país" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country} value={country}>
+                      {country}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="departureDate">Fecha de salida</Label>
                 <Input
-                  id="flightNumber"
-                  name="flightNumber"
-                  placeholder="Ej: AA1234"
-                  value={formData.flightNumber}
+                  id="departureDate"
+                  name="departureDate"
+                  type="date"
+                  min={today}
+                  value={formData.departureDate}
                   onChange={handleChange}
                   required
                 />
               </div>
 
-              {/* País de destino */}
-              <div className="space-y-2">
-                <Label htmlFor="destination">País de destino</Label>
-                <Select
-                  value={formData.destination}
-                  onValueChange={handleCountryChange}
-                  disabled={loadingData}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el país de destino" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((country) => (
-                      <SelectItem key={country} value={country}>
-                        {country}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Fecha de salida */}
-              <div className="space-y-2">
-                <Label htmlFor="departureDate">Fecha de salida</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="departureDate"
-                    name="departureDate"
-                    type="date"
-                    min={today}
-                    value={formData.departureDate}
-                    onChange={handleChange}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Fecha de regreso */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="returnDate">Fecha de regreso</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="returnDate"
-                    name="returnDate"
-                    type="date"
-                    min={formData.departureDate || today}
-                    value={formData.returnDate}
-                    onChange={handleChange}
-                    className="pl-10"
-                    required
-                  />
-                </div>
+                <Input
+                  id="returnDate"
+                  name="returnDate"
+                  type="date"
+                  min={formData.departureDate || today}
+                  value={formData.returnDate}
+                  onChange={handleChange}
+                  required
+                />
               </div>
+            </div>
 
-              {/* Tipo de viaje */}
-              <div className="space-y-2">
-                <Label htmlFor="type">Tipo de viaje</Label>
-                <Select
-                  value={formData.type}
-                  onValueChange={(value) => setFormData({ ...formData, type: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecciona el tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Personal">Personal</SelectItem>
-                    <SelectItem value="Negocios">Negocios</SelectItem>
-                    <SelectItem value="Otro">Otro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Botón */}
-              <Button
-                type="submit"
-                className="w-full"
-                size="lg"
-                disabled={loading || loadingData}
+            {/* Trip Type */}
+            <div className="space-y-1">
+              <Label htmlFor="type">Tipo de viaje</Label>
+              <Select
+                value={formData.type}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, type: value })
+                }
               >
-                {loading ? "Guardando..." : "Guardar Viaje"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+                <SelectTrigger>
+                  <SelectValue placeholder="Tipo de viaje" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Personal">Personal</SelectItem>
+                  <SelectItem value="Tourism">Turismo</SelectItem>
+                  <SelectItem value="Business">Negocios</SelectItem>
+                  <SelectItem value="Health">Salud</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Button */}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loading || loadingData}
+            >
+              {loading ? "Guardando..." : "Guardar Viaje"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   );
 }

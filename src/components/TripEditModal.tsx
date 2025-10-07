@@ -1,17 +1,17 @@
-// src/components/TripEditModal.tsx
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/Button";
-
-interface Trip {
-  id: number;
-  destination: string;
-  date: string;
-  returnDate?: string;
-  airline: string;
-  status: string;
-  progress: number;
-  type?: string;
-}
+import Modal from "./Modal";
+import { Label } from "./ui/Label";
+import { Input } from "./ui/Input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "./ui/Select";
+import { fetchCountries } from "../services/LocationApi";
+import { Trip } from "../types/types";
 
 interface TripEditModalProps {
   isOpen: boolean;
@@ -26,142 +26,153 @@ interface TripEditModalProps {
   }) => void;
 }
 
-export default function TripEditModal({ isOpen, onClose, trip, onSave }: TripEditModalProps) {
+const formatDate = (isoDate: string) => isoDate?.split("T")[0] || "";
+
+const capitalizeFirstLetter = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+export default function TripEditModal({
+  isOpen,
+  onClose,
+  trip,
+  onSave,
+}: TripEditModalProps) {
   const [destination, setDestination] = useState("");
   const [flightNumber, setFlightNumber] = useState("");
   const [departureDate, setDepartureDate] = useState("");
   const [returnDate, setReturnDate] = useState("");
-  const [type, setTripType] = useState("personal");
+  const [type, setTripType] = useState("Personal");
+  const [countries, setCountries] = useState<string[]>([]);
+  const [loadingCountries, setLoadingCountries] = useState(true);
+
+  const today = new Date().toISOString().split("T")[0];
 
   useEffect(() => {
-    if (trip) {
-      setDestination(trip.destination);
-      setFlightNumber(trip.airline);
-      setDepartureDate(trip.date);
-      setReturnDate(trip.returnDate || "");
-      setTripType(trip.type || "personal");
-    }
-  }, [trip]);
+    const loadCountries = async () => {
+      try {
+        const cList = await fetchCountries();
+        setCountries(cList);
+      } catch (err) {
+        console.error("[TripEditModal] Error al cargar países:", err);
+      } finally {
+        setLoadingCountries(false);
+      }
+    };
+    loadCountries();
+  }, []);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    if (trip && isOpen) {
+      setDestination(trip.destination || "");
+      setFlightNumber(trip.flightNumber || "");
+      setDepartureDate(formatDate(trip.departureDate));
+      setReturnDate(trip.returnDate ? formatDate(trip.returnDate) : "");
+      setTripType(capitalizeFirstLetter(trip.type || "Personal"));
+    } else {
+      setDestination("");
+      setFlightNumber("");
+      setDepartureDate("");
+      setReturnDate("");
+      setTripType("Personal");
+    }
+  }, [trip, isOpen]);
 
   const handleSave = () => {
-  if (!destination.trim()) {
-    alert("El país de destino es obligatorio.");
-    return;
-  }
+    if (!flightNumber.trim()) return alert("Por favor ingresa el número de vuelo");
+    if (!destination) return alert("Por favor selecciona el país de destino");
+    if (!departureDate) return alert("Por favor selecciona la fecha de salida");
+    if (!returnDate) return alert("Por favor selecciona la fecha de regreso");
+    if (!type) return alert("Selecciona el tipo de viaje");
 
-  if (!flightNumber.trim()) {
-    alert("El número de vuelo es obligatorio.");
-    return;
-  }
+    const dep = new Date(departureDate);
+    const ret = new Date(returnDate);
+    if (dep > ret) return alert("La fecha de regreso no puede ser anterior a la de salida");
 
-  if (!departureDate) {
-    alert("Debes seleccionar una fecha de salida.");
-    return;
-  }
-
-  if (!returnDate) {
-    alert("Debes seleccionar una fecha de regreso.");
-    return;
-  }
-
-  if (!type) {
-    alert("Selecciona el tipo de viaje.");
-    return;
-  }
-
-  onSave({ destination, flightNumber, departureDate, returnDate, type });
-};
-
+    onSave({ destination, flightNumber, departureDate, returnDate, type });
+  };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-          Editar información del viaje ✈️
-        </h2>
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">
+        Editar información del viaje ✈️
+      </h2>
 
-        <div className="space-y-4">
-          {/* Destino */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              País de destino
-            </label>
-            <input
-              type="text"
-              value={destination}
-              onChange={(e) => setDestination(e.target.value)}
-              className="w-full mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-              placeholder="Ej. Estados Unidos"
+      <div className="space-y-4">
+        <div className="space-y-1">
+          <Label htmlFor="flightNumber">Número de vuelo</Label>
+          <Input
+            id="flightNumber"
+            value={flightNumber}
+            onChange={(e) => setFlightNumber(e.target.value)}
+            placeholder="Ej. AA1234"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="destination">País de destino</Label>
+          <Select
+            value={destination}
+            onValueChange={setDestination}
+            disabled={loadingCountries}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecciona país" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="departureDate">Fecha de salida</Label>
+            <Input
+              id="departureDate"
+              type="date"
+              value={departureDate}
+              min={today}
+              onChange={(e) => setDepartureDate(e.target.value)}
             />
           </div>
 
-          {/* Número de vuelo */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Número de vuelo
-            </label>
-            <input
-              type="text"
-              value={flightNumber}
-              onChange={(e) => setFlightNumber(e.target.value)}
-              className="w-full mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-              placeholder="Ej. AA1234"
+          <div className="space-y-1">
+            <Label htmlFor="returnDate">Fecha de regreso</Label>
+            <Input
+              id="returnDate"
+              type="date"
+              value={returnDate}
+              min={departureDate || today}
+              onChange={(e) => setReturnDate(e.target.value)}
             />
-          </div>
-
-          {/* Fechas */}
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Fecha de salida
-              </label>
-              <input
-                type="date"
-                value={departureDate}
-                onChange={(e) => setDepartureDate(e.target.value)}
-                className="w-full mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Fecha de regreso
-              </label>
-              <input
-                type="date"
-                value={returnDate}
-                onChange={(e) => setReturnDate(e.target.value)}
-                className="w-full mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-          </div>
-
-          {/* Tipo de viaje */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Tipo de viaje
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setTripType(e.target.value)}
-              className="w-full mt-1 p-2 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:text-white"
-            >
-              <option value="personal">Personal</option>
-              <option value="negocios">Negocios</option>
-              <option value="vacaciones">Vacaciones</option>
-            </select>
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button onClick={handleSave}>Guardar</Button>
+        {/* Tipo de viaje */}
+        <div className="space-y-1">
+          <Label htmlFor="type">Tipo de viaje</Label>
+          <Select value={type} onValueChange={setTripType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Tipo de viaje" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Personal">Personal</SelectItem>
+              <SelectItem value="Turismo">Turismo</SelectItem>
+              <SelectItem value="Negocios">Negocios</SelectItem>
+              <SelectItem value="Salud">Salud</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
-    </div>
+
+      <div className="flex justify-end gap-3 mt-6">
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button onClick={handleSave}>Guardar</Button>
+      </div>
+    </Modal>
   );
 }

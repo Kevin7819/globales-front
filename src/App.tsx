@@ -15,7 +15,7 @@ import ProfilePage from "./pages/profile/page";
 import Trips from "./pages/TripManagement/Trip/page";
 import TripDetails from "./pages/TripManagement/TripDetails/page";
 import NewTrip from "./pages/TripManagement/NewTrip/page";
-import Modal from "./components/modal";
+import Modal from "./components/Modal";
 import "./App.css";
 
 // Componente que maneja rutas y modales

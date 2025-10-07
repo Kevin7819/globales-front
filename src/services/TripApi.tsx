@@ -50,4 +50,15 @@ export const TripApi = {
       throw error;
     }
   },
+
+  // Get Trip by ID
+  getTripById: async (id: string | number) => {
+    try {
+      const response = await Api.get(`/Trip/${id}`);
+      return response.data;
+    } catch (error: any) {
+      console.error("[TripApi] Error al obtener viaje por ID:", error.response?.data || error.message);
+      throw error;
+    }
+  },
 };
