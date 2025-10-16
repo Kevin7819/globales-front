@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 const Api: AxiosInstance = axios.create({
-  baseURL: "http://localhost:5089/Api",
+  baseURL: "https://localhost:7273/api",
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
 });
@@ -27,6 +27,9 @@ Api.interceptors.response.use(
       const status = error.response.status;
       if (status === 401) {
         console.warn("Unauthorized → JWT may be invalid or expired.");
+        //borrar los datos antes de redirigir
+         localStorage.removeItem("token");
+         localStorage.removeItem("user");
         window.location.href = "/login"
       }
       if (status === 403) {
