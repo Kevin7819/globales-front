@@ -69,10 +69,37 @@ export const AuthApi = {
   },
 };
 
-//Helper functions (para rutas protegidas)
+//Helper functions 
 export const getAuthUser = () => {
-  const user = localStorage.getItem("user");
-  return user ? JSON.parse(user) : null;
+  try {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+
+    if (!token || !user) {
+      clearAuthData();
+      return null;
+    }
+
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = tokenPayload.exp * 1000 < Date.now();
+      
+      if (isExpired) {
+        clearAuthData();
+        return null;
+      }
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      clearAuthData();
+      return null;
+    }
+
+    return JSON.parse(user);
+  } catch (error) {
+    console.error("Error getting auth user:", error);
+    clearAuthData();
+    return null;
+  }
 };
 
 export const clearAuthData = () => {
