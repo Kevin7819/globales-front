@@ -1,18 +1,33 @@
 import Api from "./Api";
 
+interface AuthResponse {
+  isSuccess: boolean;
+  user: {
+    id: number;
+    email: string;
+    role: string;
+    token: string;
+  };
+  message?: string;
+}
+
 export const AuthApi = {
-  // Login user using email
-  login: async (email: string, password: string) => {
+  // 🔹 Login user
+  login: async (email: string, password: string): Promise<AuthResponse> => {
     const response = await Api.post("/Auth/Login", { email, password });
 
     if (response.data.isSuccess) {
-      localStorage.setItem("token", response.data.user.token);
-      localStorage.setItem("userId", response.data.user.id);
-      localStorage.setItem("role", response.data.user.role);
+      const userData = response.data.user;
+
+      // Guardamos toda la info del usuario en localStorage
+      localStorage.setItem("token", userData.token);
+      localStorage.setItem("user", JSON.stringify(userData));
     }
+
     return response.data;
   },
-    
+
+  // 🔹 Register new user
   register: async (
     userName: string,
     email: string,
@@ -20,7 +35,7 @@ export const AuthApi = {
     countryOfOrigin: string,
     preferredLanguage: string,
     birthDate: Date
-  ) => {
+  ): Promise<AuthResponse> => {
     const birthDateString = birthDate.toISOString().split("T")[0];
     const response = await Api.post("/Auth/Register", {
       UserName: userName,
@@ -32,17 +47,62 @@ export const AuthApi = {
     });
 
     if (response.data.isSuccess && response.data.user?.token) {
-      localStorage.setItem("token", response.data.user.token);
-      localStorage.setItem("userId", response.data.user.id);
-      localStorage.setItem("role", response.data.user.role);
+      const userData = response.data.user;
+      localStorage.setItem("token", userData.token);
+      localStorage.setItem("user", JSON.stringify(userData));
     }
 
     return response.data;
   },
 
-  // Get current user
+  // 🔹 Get user by ID
   getUser: async (userId: number) => {
     const response = await Api.get(`/User/${userId}`);
     return response.data;
   },
+
+  // 🔹 Logout / clear local storage
+  logout: () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login";
+  },
+};
+
+//Helper functions 
+export const getAuthUser = () => {
+  try {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+
+    if (!token || !user) {
+      clearAuthData();
+      return null;
+    }
+
+    try {
+      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+      const isExpired = tokenPayload.exp * 1000 < Date.now();
+      
+      if (isExpired) {
+        clearAuthData();
+        return null;
+      }
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      clearAuthData();
+      return null;
+    }
+
+    return JSON.parse(user);
+  } catch (error) {
+    console.error("Error getting auth user:", error);
+    clearAuthData();
+    return null;
+  }
+};
+
+export const clearAuthData = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
 };

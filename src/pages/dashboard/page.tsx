@@ -3,8 +3,9 @@ import { Link } from "react-router-dom"
 import { Button } from "../../components/ui/Button"
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/Card"
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/Avatar"
-import { MapPin, Calendar, Shield, Heart, MessageCircle, Bell, Settings, Plane, Globe } from "lucide-react"
+import { MapPin, Calendar, Shield, Heart, MessageCircle, Bell, Settings, Plane, Globe, LogOut } from "lucide-react"
 import { User, UserApi } from "../../services/UserApi"
+import {DropdownMenu, DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "../../components/ui/DropdownMenu"
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -30,6 +31,13 @@ export default function DashboardPage() {
     }
     fetchUser()
   }, [])
+
+  const handleLogout = () => {
+      localStorage.removeItem("token")
+      localStorage.removeItem("userId")
+      localStorage.removeItem("role")
+      window.location.href = "/login"
+    }
 
   if (loading) {
     return <div className="p-8 text-center text-gray-500">Loading user...</div>
@@ -64,7 +72,21 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm"><Bell className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="sm"><Settings className="h-4 w-4" /></Button>
+             <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" title="Configuración">
+                    <Settings className="h-4 w-4 text-black dark:text-white" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="w-full text-sm">Editar Perfil</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 text-sm">
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Avatar>
                 <AvatarImage src={user.avatar || "/placeholder.svg"} />
                 <AvatarFallback>{userInitials}</AvatarFallback>
@@ -77,7 +99,7 @@ export default function DashboardPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">¡Hola, {user.name}! 👋</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">¡Bienvenido!, {user.name}</h1>
           <p className="text-gray-600 dark:text-gray-300">
             Aquí tienes un resumen de tus próximos viajes y recomendaciones personalizadas.
           </p>
