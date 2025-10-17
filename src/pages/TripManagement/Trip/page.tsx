@@ -5,10 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../../components/ui/Badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../../../components/ui/Avatar";
 import { Progress } from "../../../components/ui/Progress";
-import { MapPin, Calendar, Pencil, Trash2, PlusCircle, Globe, Bell, Settings } from "lucide-react";
+import { MapPin, Calendar, Pencil, Trash2, PlusCircle, Globe, Bell, Settings,LogOut } from "lucide-react";
 import { TripApi } from "../../../services/TripApi";
 import { User, UserApi } from "../../../services/UserApi";
 import TripEditModal from "../../../components/TripEditModal";
+import {DropdownMenu, DropdownMenuContent,DropdownMenuItem, DropdownMenuTrigger} from "../../../components/ui/DropdownMenu"
 
 export interface Trip {
   tripId: number;
@@ -48,6 +49,13 @@ export default function TripsPage() {
     }
     fetchUser();
   }, []);
+
+  const handleLogout = () => {
+      localStorage.removeItem("token")
+      localStorage.removeItem("userId")
+      localStorage.removeItem("role")
+      window.location.href = "/login"
+    }
 
   const fetchTrips = useCallback(async () => {
     setLoading(true);
@@ -122,7 +130,22 @@ export default function TripsPage() {
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm"><Bell className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="sm"><Settings className="h-4 w-4" /></Button>
+           <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" title="Configuración">
+                    <Settings className="h-4 w-4 text-black dark:text-white" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="w-full text-sm">Editar Perfil</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 text-sm">
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
             <Avatar>
               <AvatarImage src={user?.avatar || "/placeholder.svg"} />
               <AvatarFallback>{userInitials}</AvatarFallback>
