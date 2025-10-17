@@ -65,9 +65,8 @@ export default function DashboardPage() {
               </Link>
               <nav className="hidden md:flex items-center gap-6 ml-8">
                 <Link to="/dashboard" className="text-blue-600 font-medium">Dashboard</Link>
-                <Link to="/map" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">Mapa</Link>
-                <Link to="/chat" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">Asistente</Link>
                 <Link to="/trips" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">Viajes</Link>
+                <Link to="/travel-guides" className="text-gray-600 hover:text-blue-600 dark:text-gray-300">Guias de viaje</Link>
               </nav>
             </div>
             <div className="flex items-center gap-4">

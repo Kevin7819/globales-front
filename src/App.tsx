@@ -7,6 +7,7 @@ import Trips from "./pages/TripManagement/Trip/page";
 import TripDetails from "./pages/TripManagement/TripDetails/page";
 import NewTrip from "./pages/TripManagement/NewTrip/page";
 import Profile from "./pages/profile/page";
+import TravelGuides from "./pages/TravelGuides/page";
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="/trips/:id" element={<TripDetails />} />
           <Route path="/trips/new" element={<NewTrip />} />
           <Route path="/profile" element={<Profile/>}/>
+          <Route path="/travel-guides" element={<TravelGuides/>}/>
         </Route>
       </Routes>
     

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { ProtectedRoute } from "./ProtectedRoutes";
 import Dashboard from "../pages/dashboard/page";
 import ProfilePage from "../pages/profile/page";
+import TravelGuides from "../pages/TravelGuides/page";
 import Trips from "../pages/TripManagement/Trip/page";
 import TripDetails from "../pages/TripManagement/TripDetails/page";
 import NewTrip from "../pages/TripManagement/NewTrip/page";
@@ -40,6 +41,16 @@ function PrivateRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="travel-guides"
+          element={
+            <ProtectedRoute allowedRoles={["Admin", "Passenger"]}>
+              <TravelGuides />
+            </ProtectedRoute>
+          }
+        />
+
 
         <Route
           path="trips"
