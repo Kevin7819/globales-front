@@ -1,5 +1,18 @@
 import Api from "./Api";
 
+export interface Trip {
+  tripId: number;
+  destination: string;
+  departureDate: string;
+  returnDate: string;
+  flightNumber?: string;
+  type: string;
+  countryCode: string;
+  latitude?: number;
+  longitude?: number;
+  userId: number;
+}
+
 export const TripApi = {
   // Create Trip 
   createTrip: async (tripData: {
@@ -25,6 +38,17 @@ export const TripApi = {
       return response.data;
     } catch (error: any) {
       console.error("[TripApi] Error al obtener viajes:", error.response?.data || error.message);
+      throw error;
+    }
+  },
+
+  // Get Nearest Trip 
+  getNearestTrip: async (): Promise<Trip> => {
+    try {
+      const response = await Api.get("/Trip/nearest");
+      return response.data;
+    } catch (error: any) {
+      console.error("[TripApi] Error al obtener viaje más cercano:", error.response?.data || error.message);
       throw error;
     }
   },
