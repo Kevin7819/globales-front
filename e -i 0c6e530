@@ -1,0 +1,13 @@
+[33m00d9241[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev[m[33m)[m [22/10/2025 01:25h] Add new UI components: skeletons, modals, quick action cards
+[33mc5fdc22[m [22/10/2025 01:18h] Remove old TripManagement components and types(refactor to index)
+[33m0c6e530[m [22/10/2025 01:17h] Update README and remove old logos
+[33ma517d3e[m [22/10/2025 01:16h] Refactor App layout and update private routes
+[33mb1d581c[m[33m ([m[1;31morigin/dev[m[33m)[m Frontend implementation of travel guides system (#8)
+[33mb309ac3[m Feature/protected routes (#7)
+[33mc6e5f6a[m Feature/trip registration (#6)
+[33m380f40a[m Feature/perfil dashboard (#5)
+[33mad9b7a6[m [Feature] / User registration and login on the web (#4)
+[33m69867e1[m Update PULL_REQUEST_TEMPLATE.md (#2)
+[33ma586bb3[m Feature/login-by-username (#3)
+[33m00464f1[m Restructure project: move files out of app folder (#1)
+[33md98c2b9[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m [17/09/2025 23:15h] Initial commit with cleaned repo
