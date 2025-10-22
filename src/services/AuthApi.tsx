@@ -1,25 +1,13 @@
 import Api from "./Api";
 
-interface AuthResponse {
-  isSuccess: boolean;
-  user: {
-    id: number;
-    email: string;
-    role: string;
-    token: string;
-  };
-  message?: string;
-}
-
+// Authentication API methods
 export const AuthApi = {
-  // 🔹 Login user
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  // Login user
+  login: async (email: string, password: string) => {
     const response = await Api.post("/Auth/Login", { email, password });
 
-    if (response.data.isSuccess) {
+    if (response.data.isSuccess && response.data.user) {
       const userData = response.data.user;
-
-      // Guardamos toda la info del usuario en localStorage
       localStorage.setItem("token", userData.token);
       localStorage.setItem("user", JSON.stringify(userData));
     }
@@ -27,7 +15,7 @@ export const AuthApi = {
     return response.data;
   },
 
-  // 🔹 Register new user
+  // Register new user
   register: async (
     userName: string,
     email: string,
@@ -35,15 +23,14 @@ export const AuthApi = {
     countryOfOrigin: string,
     preferredLanguage: string,
     birthDate: Date
-  ): Promise<AuthResponse> => {
-    const birthDateString = birthDate.toISOString().split("T")[0];
+  ) => {
     const response = await Api.post("/Auth/Register", {
       UserName: userName,
       Email: email,
       Password: password,
       CountryOfOrigin: countryOfOrigin,
       PreferredLanguage: preferredLanguage,
-      BirthDate: birthDateString,
+      BirthDate: birthDate.toISOString().split("T")[0],
     });
 
     if (response.data.isSuccess && response.data.user?.token) {
@@ -55,13 +42,13 @@ export const AuthApi = {
     return response.data;
   },
 
-  // 🔹 Get user by ID
+  // Get user by ID
   getUser: async (userId: number) => {
     const response = await Api.get(`/User/${userId}`);
     return response.data;
   },
 
-  // 🔹 Logout / clear local storage
+  // Logout user
   logout: () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -69,39 +56,30 @@ export const AuthApi = {
   },
 };
 
-//Helper functions 
+// Get current authenticated user from localStorage
 export const getAuthUser = () => {
-  try {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
+  const token = localStorage.getItem("token");
+  const user = localStorage.getItem("user");
 
-    if (!token || !user) {
-      clearAuthData();
-      return null;
-    }
-
-    try {
-      const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-      const isExpired = tokenPayload.exp * 1000 < Date.now();
-      
-      if (isExpired) {
-        clearAuthData();
-        return null;
-      }
-    } catch (error) {
-      console.error("Error decoding token:", error);
-      clearAuthData();
-      return null;
-    }
-
-    return JSON.parse(user);
-  } catch (error) {
-    console.error("Error getting auth user:", error);
+  if (!token || !user) {
     clearAuthData();
-    return null;
-  }
+    return null;
+  }
+
+  try {
+    const tokenPayload = JSON.parse(atob(token.split(".")[1]));
+    if (tokenPayload.exp * 1000 < Date.now()) {
+      clearAuthData();
+      return null;
+    }
+    return JSON.parse(user);
+  } catch {
+    clearAuthData();
+    return null;
+  }
 };
 
+// Clear authentication data
 export const clearAuthData = () => {
   localStorage.removeItem("token");
   localStorage.removeItem("user");
