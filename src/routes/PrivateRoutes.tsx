@@ -4,10 +4,8 @@ import { ProtectedRoute } from "./ProtectedRoutes";
 import Dashboard from "../pages/dashboard/page";
 import ProfilePage from "../pages/profile/page";
 import TravelGuides from "../pages/TravelGuides/page";
-import Trips from "../pages/TripManagement/Trip/page";
-import TripDetails from "../pages/TripManagement/TripDetails/page";
-import NewTrip from "../pages/TripManagement/NewTrip/page";
-import Layout from "../layout";
+import Trips from "../pages/TripManagement/page";
+import Layout from "../components/layout/Layout";
 import { getAuthUser, clearAuthData } from "../services/AuthApi";
 
 function PrivateRoutes() {
@@ -60,9 +58,6 @@ function PrivateRoutes() {
             </ProtectedRoute>
           }
         />
-
-        <Route path="trips/:id" element={<TripDetails />} />
-        <Route path="trips/new" element={<NewTrip />} />
       </Routes>
     </Layout>
   );

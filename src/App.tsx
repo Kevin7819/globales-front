@@ -1,11 +1,8 @@
 import { Routes, Route } from "react-router-dom";
-import Layout from "./layout";
 import PublicRoutes from "./routes/PublicRoutes";
 import PrivateRoutes from "./routes/PrivateRoutes";
 import Dashboard from "./pages/dashboard/page";
-import Trips from "./pages/TripManagement/Trip/page";
-import TripDetails from "./pages/TripManagement/TripDetails/page";
-import NewTrip from "./pages/TripManagement/NewTrip/page";
+import Trips from "./pages/TripManagement/page";
 import Profile from "./pages/profile/page";
 import TravelGuides from "./pages/TravelGuides/page";
 
@@ -20,8 +17,6 @@ function App() {
         <Route element={<PrivateRoutes />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/trips" element={<Trips />} />
-          <Route path="/trips/:id" element={<TripDetails />} />
-          <Route path="/trips/new" element={<NewTrip />} />
           <Route path="/profile" element={<Profile/>}/>
           <Route path="/travel-guides" element={<TravelGuides/>}/>
         </Route>
