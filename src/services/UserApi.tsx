@@ -1,23 +1,5 @@
 import Api from "./Api"
-
-export interface User {
-  userId: number
-  name: string
-  email: string
-  phone: string
-  countryOfOrigin: string
-  city: string
-  travelType: string
-  bio: string
-  avatar: string
-  preferredLanguage: string
-  preferences: {
-    notifications: boolean
-    culturalAlerts: boolean
-    healthAlerts: boolean
-    language: string
-  }
-}
+import type { User } from "../types"
 
 export const UserApi = {
   getCurrentUser: async (id: number): Promise<User> => {

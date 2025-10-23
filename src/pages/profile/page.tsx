@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
-import { User, UserApi } from "../../services/UserApi"
+import { UserApi } from "../../services/UserApi"
+import type { User } from "../../types"
 import { fetchCountries, fetchLanguages } from "../../services/LocationApi"
 
 export default function ProfilePage() {
@@ -73,7 +74,7 @@ export default function ProfilePage() {
       setSuccess("")
 
       try {
-        await UserApi.updateUser(user.userId, editedUser)
+        await UserApi.updateUser(user.id, editedUser)
         setUser({ ...editedUser })
         setIsEditing(false)
         setSuccess("Profile updated successfully")
@@ -115,8 +116,8 @@ export default function ProfilePage() {
     return null
   }
 
-const userInitials = user.name
-  ? user.name
+const userInitials = user.UserName
+  ? user.UserName
       .split(' ')
       .map((n: string) => n[0])
       .join('')
@@ -127,34 +128,6 @@ const userInitials = user.name
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="h-6 w-6 bg-blue-600 rounded"></div>
-                <span className="font-bold text-gray-900">Orbis</span>
-              </div>
-              <nav className="hidden md:flex items-center gap-6 ml-8">
-                <a href="/dashboard" className="text-gray-600 hover:text-blue-600">Dashboard</a>
-                <a href="/map" className="text-gray-600 hover:text-blue-600">Mapa</a>
-                <a href="/chat" className="text-gray-600 hover:text-blue-600">Asistente</a>
-                <a href="/trips" className="text-gray-600 hover:text-blue-600">Viajes</a>
-                <a href="/profile" className="text-blue-600 font-medium">Perfil</a>
-              </nav>
-            </div>
-            <div className="flex items-center gap-4">
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded">Notificaciones</button>
-              <button className="p-2 text-gray-600 hover:bg-gray-100 rounded">Ajustes</button>
-              <div className="h-8 w-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-sm font-medium text-white">
-                {userInitials}
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-6">
@@ -219,11 +192,9 @@ const userInitials = user.name
                   {userInitials}
                 </div>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{user.name || "Usuario"}</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">{user.UserName || "Usuario"}</h2>
               <p className="text-gray-600 mb-4">{user.email}</p>
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mb-4">
-                Viajero {user.travelType}
-              </span>
+
 
               {/* Stats */}
               <div className="border-t pt-4 mt-4">
@@ -280,12 +251,12 @@ const userInitials = user.name
                     {isEditing ? (
                       <input
                         type="text"
-                        value={editedUser.name}
-                        onChange={(e) => handleInputChange('name', e.target.value)}
+                        value={editedUser.UserName}
+                        onChange={(e) => handleInputChange('UserName', e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     ) : (
-                      <p className="py-2 text-gray-900">{user.name || "No especificado"}</p>
+                      <p className="py-2 text-gray-900">{user.UserName || "No especificado"}</p>
                     )}
                   </div>
                   <div>

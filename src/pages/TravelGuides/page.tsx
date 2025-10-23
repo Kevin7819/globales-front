@@ -4,8 +4,9 @@ import { Button } from "../../components/ui/Button";
 import { Card, CardContent } from "../../components/ui/Card";
 import { Input } from "../../components/ui/Input";
 import { Search, ArrowLeft, BookOpen, Loader2, X, Plane } from "lucide-react";
-import { TravelGuideApi, type CountryInfo, type QuickGuideResponse, type SafetyGuide, type HealthGuide, type CultureGuide } from "../../services/travelGuideApi";
-import { TripApi, type Trip } from "../../services/TripApi";
+import { TravelGuideApi } from "../../services/travelGuideApi";
+import type { Trip,  CountryInfo , QuickGuideResponse , SafetyGuide , HealthGuide , CultureGuide } from "../../types";
+import { TripApi  } from "../../services/TripApi";
 
 function CountryModal({ country, isOpen, onClose }: { 
   country: CountryInfo | null; 
@@ -184,7 +185,6 @@ function CountryModal({ country, isOpen, onClose }: {
         <div className="flex items-center justify-between p-6 border-b">
           <div>
             <h2 className="text-xl font-bold">{country.name}</h2>
-            <p className="text-sm text-gray-600">{country.region}</p>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
@@ -286,7 +286,7 @@ export default function TravelGuidesPage() {
     setSelectedCountry(null);
   };
 
-  // Encontrar el país del viaje más cercano (solo para mostrar en la sección destacada)
+  // Encontrar el país del viaje más cercano
   const nearestTripCountry = nearestTrip 
     ? countries.find(country => 
         country.code.toLowerCase() === nearestTrip.countryCode?.toLowerCase() ||
@@ -307,33 +307,8 @@ export default function TravelGuidesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="flex items-center gap-2 text-blue-600">
-              <ArrowLeft className="h-4 w-4" />
-              Dashboard
-            </Link>
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-8 w-8 text-blue-600" />
-              <h1 className="text-2xl font-bold">Guías de Viaje</h1>
-            </div>
-          </div>
-
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input 
-              placeholder="Buscar país..." 
-              className="pl-10 w-64"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-      </header>
-
       <div className="container mx-auto px-4 py-6">
-        {/* Sección del Viaje más Cercano - SOLO PARA MOSTRAR */}
+        {/* Sección del Viaje más Cercano */}
         {nearestTrip && nearestTripCountry && (
           <div className="mb-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
             <div className="flex items-center justify-between">
@@ -378,7 +353,6 @@ export default function TravelGuidesPage() {
                 <CardContent className="p-4">
                   <div className="text-center mb-3">
                     <h3 className="font-semibold text-lg mb-1">{country.name}</h3>
-                    <p className="text-sm text-gray-500">{country.region}</p>
                   </div>
                   <Button size="sm" className="w-full">
                     Ver Guía Completa
