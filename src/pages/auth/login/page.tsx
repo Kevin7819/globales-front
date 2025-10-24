@@ -7,36 +7,55 @@ import { Label } from "../../../components/ui/Label";
 import { Separator } from "../../../components/ui/Separator";
 import { Globe, User, Lock } from "lucide-react";
 import { AuthApi } from "../../../services/AuthApi";
+import { useNotification } from "../../../components/Notification/useNotification";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    console.log("Intentando iniciar sesión con:", { email, password });
+  // ✅ Validaciones antes de enviar
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showNotification("El formato del correo no es válido.", "error");
+    return;
+  }
 
-    try {
-      const result = await AuthApi.login(email, password);
-      console.log("Respuesta del API:", result);
+  if (!email || !password) {
+    showNotification("Por favor completa todos los campos.", "error");
+    return;
+  }
 
-      if (result.isSuccess) {
-        console.log("Login exitoso, redirigiendo a /dashboard");
-        localStorage.setItem("token", result.user.token);
-        localStorage.setItem("userId", result.user.id.toString());
-        navigate("/dashboard");
-      } else {
-        console.warn("Login fallido:", result.message);
-        alert(result.message);
-      }
-    } catch (err) {
-      console.error("Error al llamar al API de login:", err);
-      alert("Error al iniciar sesión");
+  try {
+
+    const result = await AuthApi.login(email, password);
+    console.log("Respuesta del API:", result);
+
+    // Login exitoso
+    if (result.isSuccess) {
+      showNotification(`Bienvenido de nuevo, ${result.user.name}`, "success");
+
+      localStorage.setItem("token", result.user.token);
+      localStorage.setItem("userId", result.user.id.toString());
+
+      setTimeout(() => navigate("/dashboard"), 3000);
+      return;
     }
-  };
+
+    showNotification(result.message || "Credenciales incorrectas.", "error");
+
+  } catch (err) {
+    console.error("Error al llamar al API:", err);
+    showNotification("Error al conectar con el servidor.", "error");
+  }
+  
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
