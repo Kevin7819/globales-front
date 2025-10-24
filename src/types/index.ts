@@ -24,6 +24,7 @@ export interface AuthResponse {
 export interface Trip {
   tripId: number;
   userId: number;
+  origin: string;
   destination: string;
   departureDate: string;
   returnDate?: string;
