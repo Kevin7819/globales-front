@@ -9,9 +9,14 @@ import { AuthApi } from "../../../services/AuthApi"
 import { fetchCountries, fetchLanguages } from "../../../services/LocationApi"
 import { useEffect, useState } from "react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/Select"
+import { useNotification } from "../../../components/Notification/useNotification"
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+
+  // Notification 
+  const { showNotification } = useNotification()
+
 
   // --- States ---
   const [countries, setCountries] = useState<string[]>([])
@@ -67,27 +72,27 @@ export default function RegisterPage() {
     e.preventDefault()
 
     if (form.firstName.trim().length < 2) {
-      alert("El nombre debe tener al menos 2 caracteres")
+      showNotification("El nombre debe tener al menos 2 caracteres", "warning")
       return
     }
     if (form.lastName.trim().length < 2) {
-      alert("El apellido debe tener al menos 2 caracteres")
+      showNotification("El apellido debe tener al menos 2 caracteres", "warning")
       return
     }
     if (form.password.length < 6) {
-      alert("La contraseña debe tener al menos 6 caracteres")
+      showNotification("La contraseña debe tener al menos 6 caracteres", "warning")
       return
     }
     if (form.password !== form.confirmPassword) {
-      alert("Las contraseñas no coinciden")
+      showNotification("Las contraseñas no coinciden", "error")
       return
     }
     if (!form.countryOfOrigin || !form.preferredLanguage) {
-      alert("Por favor selecciona tu país e idioma preferido")
+      showNotification("Por favor selecciona tu país e idioma preferido", "warning")
       return
     }
     if (!form.birthDate) {
-      alert("Por favor selecciona tu fecha de nacimiento")
+      showNotification("Por favor selecciona tu fecha de nacimiento", "warning")
       return
     }
 
@@ -95,7 +100,7 @@ export default function RegisterPage() {
     const selectedDate = new Date(form.birthDate)
     const now = new Date()
     if (selectedDate > now) {
-      alert("La fecha de nacimiento no puede ser posterior a hoy")
+      showNotification("La fecha de nacimiento no puede ser posterior a hoy", "warning")
       return
     }
 
@@ -113,14 +118,14 @@ export default function RegisterPage() {
       )
 
       if (response.isSuccess) {
-        alert("Registro exitoso")
+        showNotification("Cuenta creada con éxito. ¡Ahora puedes iniciar sesión!", "success")
         navigate("/login")
       } else {
-        alert(response.message || "Error en el registro")
+         showNotification(response.message || "Error en el registro", "error")
       }
     } catch (error: any) {
       console.error("[RegisterPage] Registration error:", error)
-      alert("Hubo un problema al registrar. Intenta de nuevo.")
+      showNotification("Hubo un problema al registrar. Intenta de nuevo.", "error")
     } finally {
       setLoading(false)
     }

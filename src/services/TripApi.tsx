@@ -1,6 +1,25 @@
 import Api from "./Api";
 import type { Trip, ClaimTripResponse } from "../types";
 
+
+// Traductor de mensajes del backend
+const translateApiMessage = (message: string): string => {
+  if (!message) return "Ocurrió un error desconocido.";
+
+  const translations: Record<string, string> = {
+    "This reservation code has already been used.": "Este código de reserva ya fue utilizado.",
+    "Reservation code not found.": "No se encontró ningún viaje con ese código de reserva.",
+    "Invalid reservation code.": "El código de reserva ingresado no es válido.",
+    "Trip already claimed.": "Este viaje ya fue reclamado.",
+    "Error connecting to server.": "Error al conectar con el servidor.",
+    "Trip successfully claimed.": "¡Viaje reclamado exitosamente!",
+  };
+
+  return translations[message] || message; // Si no existe traducción, muestra el mensaje original
+};
+
+
+
 export const TripApi = {
   // Get Trips
   getTrips: async (): Promise<Trip[]> => {
@@ -36,19 +55,29 @@ export const TripApi = {
   },
 
   // Claim Trip by Reservation Code
-  claimTripByReservationCode: async (reservationCode: string): Promise<ClaimTripResponse> => {
-    try {
-      const response = await Api.post("/Trip/claim", reservationCode, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      return response.data;
-    } catch (error: any) {
-      console.error("[TripApi] Error al reclamar viaje:", error.response?.data || error.message);
-      throw error;
-    }
-  },
+claimTripByReservationCode: async (reservationCode: string): Promise<ClaimTripResponse> => {
+  try {
+    const response = await Api.post("/Trip/claim", reservationCode, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    return {
+      isSuccess: true,
+      message: translateApiMessage(response.data.message || "Viaje reclamado exitosamente."),
+    };
+  } catch (error: any) {
+    console.error("[TripApi] Error al reclamar viaje:", error.response?.data || error.message);
+
+    return {
+      isSuccess: false,
+      message: translateApiMessage(error.response?.data?.message || "Error al conectar con el servidor."),
+    };
+  }
+},
+
+
 
   // Los siguientes métodos están comentados porque el CRUD fue eliminado del backend
   /*

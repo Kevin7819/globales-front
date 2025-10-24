@@ -12,9 +12,11 @@ import { TravelGuideApi } from "../../services/travelGuideApi";
 import type { User } from "../../types";
 import type { Trip, CountryInfo, QuickGuideResponse, SafetyGuide, HealthGuide, CultureGuide } from "../../types";
 import { CountryGuideTabs } from "../../components/ui/CountryGuideTabs";
+import { useNotification } from "../../components/Notification/useNotification";
+
 
 const capitalizeFirstLetter = (str: string) =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 
 // Componente para las guías de viaje
 
@@ -173,6 +175,8 @@ export default function TripsPage() {
   // Nuevo estado para controlar qué sección mostrar en el modal
   const [modalSection, setModalSection] = useState<'details' | 'guide'>('details');
 
+  const { showNotification } = useNotification();
+
   useEffect(() => {
     async function fetchUser() {
       try {
@@ -316,24 +320,27 @@ export default function TripsPage() {
   };
 
   const handleClaimTrip = async () => {
-    if (!reservationCode.trim()) {
-      setClaimError("Por favor ingresa un código de reserva");
-      return;
-    }
+  if (!reservationCode.trim()) {
+    showNotification("Por favor ingresa un código de reserva.", "error");
+    return;
+  }
 
-    setClaimLoading(true);
-    setClaimError("");
+  setClaimLoading(true);
 
-    try {
-      const response = await TripApi.claimTripByReservationCode(reservationCode.trim());
-      handleCloseClaimModal();
-      fetchTrips(); // Recargar la lista de viajes
-    } catch (err: any) {
-      setClaimError(err.response?.data?.message || "Error al reclamar el viaje. Verifica el código.");
-    } finally {
-      setClaimLoading(false);
-    }
-  };
+  const response = await TripApi.claimTripByReservationCode(reservationCode);
+
+  if (response.isSuccess) {
+    showNotification(response.message, "success");
+    setReservationCode("");
+    handleCloseClaimModal();
+  } else {
+    showNotification(response.message, "error");
+  }
+
+  setClaimLoading(false);
+};
+
+
 
   const mostCommonType = getMostCommonTripType();
 
@@ -746,12 +753,6 @@ export default function TripsPage() {
               Encuentra este código en tu confirmación de reserva o email de la aerolínea
             </p>
           </div>
-
-          {claimError && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-              <p className="text-red-600 dark:text-red-400 text-sm">{claimError}</p>
-            </div>
-          )}
 
           <div className="flex gap-3 pt-2">
             <Button

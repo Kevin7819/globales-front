@@ -38,8 +38,9 @@ export interface Trip {
 }
 
 export interface ClaimTripResponse {
+  isSuccess: boolean;
   message: string;
-  trip: Trip;
+  data?: any;
 }
 
 // ----------------------
