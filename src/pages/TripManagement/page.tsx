@@ -5,14 +5,155 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Badge } from "../../components/ui/Badge";
 import { Input } from "../../components/ui/Input";
 import Modal from "../../components/ui/Modal";
-import { MapPin, Calendar, Plane, Plus, Filter, Search, Users, Clock, ArrowRight, Luggage, Key, Globe, Tag } from "lucide-react";
+import { MapPin, Calendar, Plane, Plus, Filter, Search, Users, Clock, ArrowRight, Luggage, Key, Globe, Tag, BookOpen, ArrowLeft, Shield, Heart, Loader2 } from "lucide-react";
 import { TripApi } from "../../services/TripApi";
 import { UserApi } from "../../services/UserApi";
+import { TravelGuideApi } from "../../services/travelGuideApi";
 import type { User } from "../../types";
-import type { Trip } from "../../types";
+import type { Trip, CountryInfo, QuickGuideResponse, SafetyGuide, HealthGuide, CultureGuide } from "../../types";
+import { CountryGuideTabs } from "../../components/ui/CountryGuideTabs";
 
 const capitalizeFirstLetter = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+// Componente para las guías de viaje
+
+function TripGuideSection({ trip }: { trip: Trip }) {
+  const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null);
+  const [guideData, setGuideData] = useState<QuickGuideResponse | null>(null);
+  const [safetyGuide, setSafetyGuide] = useState<SafetyGuide | null>(null);
+  const [healthGuide, setHealthGuide] = useState<HealthGuide | null>(null);
+  const [cultureGuide, setCultureGuide] = useState<CultureGuide | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (trip) {
+      loadCountryAndGuides();
+    }
+  }, [trip]);
+
+
+
+  const loadCountryAndGuides = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const normalizedCountryName = normalizeText(trip.destination);
+      
+      
+      console.log("Destino:", trip.destination);
+      console.log("País normalizado:", normalizedCountryName);
+
+      // Buscar el país en la lista de países disponibles
+      const countries = await TravelGuideApi.getAvailableCountries();
+      
+      const country = countries.find(c => {
+        const normalizedCountryNameFromAPI = normalizeText(c.name || "");
+        const normalizedCountryCode = normalizeText(c.code || "");
+        
+        return (
+        normalizedCountryNameFromAPI === normalizedCountryName ||
+        normalizedCountryNameFromAPI.includes(normalizedCountryName) ||
+        normalizedCountryName.includes(normalizedCountryNameFromAPI) ||
+        normalizedCountryCode === normalizedCountryName
+      );
+      });
+
+      console.log("País encontrado:", country);
+
+      if (!country) {
+        setError(`No se encontró información específica para ${trip.destination}. Destino completo: ${trip.origin} , ${trip.destination}`);
+        setLoading(false);
+        return;
+      }
+
+      setCountryInfo(country);
+
+      // Cargar todas las guías en paralelo
+      const [quickData, safetyData, healthData, cultureData] = await Promise.all([
+        TravelGuideApi.getQuickGuide(country.code),
+        TravelGuideApi.getSafetyGuide(country.code),
+        TravelGuideApi.getHealthGuide(country.code),
+        TravelGuideApi.getCultureGuide(country.code)
+      ]);
+      
+      setGuideData(quickData);
+      setSafetyGuide(safetyData);
+      setHealthGuide(healthData);
+      setCultureGuide(cultureData);
+      
+      console.log("Guías cargadas exitosamente");
+    } catch (error) {
+      console.error("Error loading guides:", error);
+      setError("Error al cargar la información de la guía de viaje");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="text-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <p className="text-gray-600 dark:text-gray-400">Cargando guía de viaje para {trip.destination}...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <p className="text-yellow-800 dark:text-yellow-200">{error}</p>
+          <Button 
+            variant="outline" 
+            className="mt-3 border-yellow-300 text-yellow-700 dark:text-yellow-300"
+            onClick={loadCountryAndGuides}
+          >
+            Reintentar
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!countryInfo) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-gray-500 dark:text-gray-400">No se pudo encontrar información para {trip.destination}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <CountryGuideTabs
+        country={countryInfo}
+        guideData={guideData}
+        safetyGuide={safetyGuide}
+        healthGuide={healthGuide}
+        cultureGuide={cultureGuide}
+        loading={loading}
+      />
+      
+      <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 mt-4">
+        <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+          Información específica para {countryInfo.name}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function normalizeText(text: string) {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
 
 export default function TripsPage() {
   const location = useLocation();
@@ -28,6 +169,9 @@ export default function TripsPage() {
   const [reservationCode, setReservationCode] = useState("");
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimError, setClaimError] = useState("");
+
+  // Nuevo estado para controlar qué sección mostrar en el modal
+  const [modalSection, setModalSection] = useState<'details' | 'guide'>('details');
 
   useEffect(() => {
     async function fetchUser() {
@@ -143,12 +287,21 @@ export default function TripsPage() {
 
   const handleTripClick = async (trip: Trip) => {
     setSelectedTrip(trip);
+    setModalSection('details');
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedTrip(null);
+    setModalSection('details');
+  };
+
+  const handleOpenGuide = (trip: Trip, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSelectedTrip(trip);
+    setModalSection('guide');
+    setIsModalOpen(true);
   };
 
   // Funciones para el modal de reclamar viaje
@@ -253,7 +406,6 @@ export default function TripsPage() {
             </div>
 
             <div className={`bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl p-6 text-white shadow-lg`}>
-
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-white text-sm mb-1">Destinos Únicos</p>
@@ -267,7 +419,6 @@ export default function TripsPage() {
                 <Globe className="h-8 w-8 text-white" />
               </div>
             </div>
-
           </div>
 
           {/* Filters and Search */}
@@ -370,7 +521,7 @@ export default function TripsPage() {
                       <div className="bg-blue-100 dark:bg-blue-900/20 w-10 h-10 rounded-full flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-800/30 transition-colors">
                         <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <span className="font-semibold">{trip.destination}</span>
+                      <span className="font-semibold">{trip.origin}, {trip.destination}</span>
                     </CardTitle>
                     
                     <CardDescription className="flex items-center gap-2 mt-3 text-sm">
@@ -406,76 +557,151 @@ export default function TripsPage() {
                       </div>
                     </div>
                     
-                    <Button 
-                      size="sm" 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 group/btn"
-                    >
-                      Ver Detalles
-                      <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-all duration-300 group/btn"
+                      >
+                        Ver Detalles
+                        <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                      
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        className="border-green-300 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all duration-300"
+                        onClick={(e) => handleOpenGuide(trip, e)}
+                      >
+                        <BookOpen className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
         )}
+
       </main>
 
-      {/* Trip Details Modal */}
+      {/* Trip Details & Guide Modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-blue-100 dark:bg-blue-900/20 w-12 h-12 rounded-full flex items-center justify-center">
-            <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className={`${modalSection === 'guide' ? 'bg-green-100 dark:bg-green-900/20' : 'bg-blue-100 dark:bg-blue-900/20'} w-12 h-12 rounded-full flex items-center justify-center`}>
+              {modalSection === 'guide' ? (
+                <BookOpen className="h-6 w-6 text-green-600 dark:text-green-400" />
+              ) : (
+                <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              )}
+            </div>
+            <div>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                {selectedTrip?.destination}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                {modalSection === 'guide' ? 'Guía de Viaje' : selectedTrip && capitalizeFirstLetter(selectedTrip.type)}
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              {selectedTrip?.destination}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              {selectedTrip && capitalizeFirstLetter(selectedTrip.type)}
-            </p>
+
+          {/* Botones de navegación */}
+          <div className="flex gap-2">
+            {modalSection === 'guide' ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setModalSection('details')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver a Detalles
+              </Button>
+            ) : (
+              selectedTrip && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setModalSection('guide')}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Ver Guía
+                </Button>
+              )
+            )}
           </div>
         </div>
 
-        <div className="space-y-4 mb-6">
-          <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-400">Fecha de Salida</span>
-            <span className="font-semibold text-gray-900 dark:text-white">
-              {selectedTrip && new Date(selectedTrip.departureDate).toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </span>
-          </div>
-
-          {selectedTrip?.flightNumber && (
+        {modalSection === 'details' ? (
+          /* Sección de Detalles del Viaje */
+          <div className="space-y-4">
+            {/* Origen */}
             <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-              <span className="text-gray-600 dark:text-gray-400">Número de Vuelo</span>
-              <span className="font-mono font-semibold text-gray-900 dark:text-white">
-                {selectedTrip.flightNumber}
+              <span className="text-gray-600 dark:text-gray-400">Origen</span>
+              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                {selectedTrip?.origin}
               </span>
             </div>
-          )}
 
-          <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
-            <span className="text-gray-600 dark:text-gray-400">Código de Reserva</span>
-            <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
-              {selectedTrip?.reservationCode}
-            </span>
-          </div>
+            {/* Destino */}
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Destino</span>
+              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                {selectedTrip?.destination}
+              </span>
+            </div>
 
-          <div className="flex justify-between items-center py-2">
-            <span className="text-gray-600 dark:text-gray-400">Estado</span>
-            <span className={`font-semibold ${selectedTrip && getDaysUntilTrip(selectedTrip.departureDate).color}`}>
-              {selectedTrip && getDaysUntilTrip(selectedTrip.departureDate).text}
-            </span>
+            {/* Fecha de salida */}
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Fecha de Salida</span>
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {selectedTrip &&
+                  new Date(selectedTrip.departureDate).toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+              </span>
+            </div>
+
+            {/* Número de vuelo */}
+            {selectedTrip?.flightNumber && (
+              <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+                <span className="text-gray-600 dark:text-gray-400">Número de Vuelo</span>
+                <span className="font-mono font-semibold text-gray-900 dark:text-white">
+                  {selectedTrip.flightNumber}
+                </span>
+              </div>
+            )}
+
+            {/* Código de reserva */}
+            <div className="flex justify-between items-center py-2 border-b border-gray-200 dark:border-gray-700">
+              <span className="text-gray-600 dark:text-gray-400">Código de Reserva</span>
+              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
+                {selectedTrip?.reservationCode}
+              </span>
+            </div>
+
+            {/* Estado del viaje */}
+            <div className="flex justify-between items-center py-2">
+              <span className="text-gray-600 dark:text-gray-400">Estado</span>
+              <span
+                className={`font-semibold ${
+                  selectedTrip && getDaysUntilTrip(selectedTrip.departureDate).color
+                }`}
+              >
+                {selectedTrip && getDaysUntilTrip(selectedTrip.departureDate).text}
+              </span>
+            </div>
           </div>
-        </div>
+        ) : (
+          /* Sección de Guía de Viaje */
+          selectedTrip && <TripGuideSection trip={selectedTrip} />
+        )}
+
       </Modal>
 
       {/* Claim Trip Modal */}
