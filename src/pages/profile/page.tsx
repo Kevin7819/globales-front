@@ -2,6 +2,9 @@ import { useEffect, useState } from "react"
 import { UserApi } from "../../services/UserApi"
 import type { User } from "../../types"
 import { fetchCountries, fetchLanguages } from "../../services/LocationApi"
+import { useNotification } from "../../components/Notification/useNotification";
+import ConfirmModal from "../../components/Modal/ConfirmModal";
+
 
 export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false)
@@ -17,6 +20,9 @@ export default function ProfilePage() {
     const [languages, setLanguages] = useState<string[]>([])
 
     const travelTypes = ["Negocios", "Turismo", "Estudios", "Familia", "Médico", "Otro"]
+
+    const { showNotification } = useNotification();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     useEffect(() => {
       const loadData = async () => {
@@ -67,31 +73,72 @@ export default function ProfilePage() {
       setSuccess("")
     }
 
-    const handleSave = async () => {
-      if (!editedUser || !user) return
-      setIsSaving(true)
-      setError("")
-      setSuccess("")
+ const handleSave = async () => {
+  if (!editedUser || !user) return;
 
-      try {
-        await UserApi.updateUser(user.id, editedUser)
-        setUser({ ...editedUser })
-        setIsEditing(false)
-        setSuccess("Profile updated successfully")
-        setTimeout(() => setSuccess(""), 3000)
-      } catch (err: any) {
-        console.error("Error updating profile:", err)
-        setError(err.message || "Error updating profile")
-      } finally {
-        setIsSaving(false)
-      }
+  setIsSaving(true);
+  setError("");
+  setSuccess("");
+
+  try {
+    const userId = Number(localStorage.getItem("userId"));
+    console.log("🧾 ID del usuario:", userId);
+
+    if (!userId) {
+      showNotification("No se encontró la sesión activa del usuario.", "error");
+      return;
     }
+
+    // Validaciones simples antes del envío
+    if (!editedUser.UserName || editedUser.UserName.trim().length < 2) {
+      showNotification("El nombre debe tener al menos 2 caracteres", "warning");
+      return;
+    }
+
+    if (!editedUser.email || !editedUser.email.includes("@")) {
+      showNotification("El correo electrónico no es válido", "warning");
+      return;
+    }
+
+    // Construir los datos del DTO (sin id)
+    const updatedData = {
+      name: editedUser.UserName?.trim() || "",
+      email: editedUser.email?.trim() || "",
+      countryOfOrigin: editedUser.countryOfOrigin?.trim() || null,
+      preferredLanguage: editedUser.preferredLanguage?.trim() || null,
+      birthDate: editedUser.birthDate
+        ? editedUser.birthDate.split("T")[0]
+        : null,
+      role: editedUser.role || "Passenger",
+    };
+
+    await UserApi.updateUser(userId, editedUser)
+
+    setUser((prev) => ({ ...prev, ...editedUser }));
+    setIsEditing(false);
+
+    showNotification("Perfil actualizado con exito", "success");
+  } catch (err: any) {
+    console.error("Error updating profile:", err.response?.data || err.message);
+
+    const errorMessage =
+      err.response?.data?.title ||
+      err.response?.data?.errors?.[Object.keys(err.response?.data?.errors || {})[0]]?.[0] ||
+      "Error al actualizar el perfil";
+
+    showNotification(errorMessage, "error");
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
     const handleLogout = () => {
       localStorage.removeItem("token")
       localStorage.removeItem("userId")
       localStorage.removeItem("role")
-      window.location.href = "/login"
+      showNotification("Sesión cerrada correctamente", "info");
+      window.location.href = "/login";
     }
 
     const handleInputChange = (field: keyof User, value: any) => {
@@ -221,12 +268,25 @@ const userInitials = user.UserName
               <p className="text-sm text-gray-600 mb-4">
                 Cierra sesión de forma segura
               </p>
+
+              {/* Botón que abre el modal */}
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutModal(true)}
                 className="w-full border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2"
               >
                 Cerrar Sesión
               </button>
+
+              {/* Modal de confirmación */}
+              <ConfirmModal
+                isOpen={showLogoutModal}
+                title="¿Cerrar sesión?"
+                message="Se cerrará tu sesión actual. Tendrás que iniciar sesión nuevamente para continuar."
+                confirmText="cerrar sesión"
+                cancelText="Cancelar"
+                onConfirm={handleLogout}
+                onCancel={() => setShowLogoutModal(false)}
+              />
             </div>
           </div>
 

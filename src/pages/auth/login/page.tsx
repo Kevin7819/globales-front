@@ -76,7 +76,7 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
             <CardDescription>Accede a tu asistente de viajes personalizado</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" noValidate>
               {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Correo electrónico</Label>
@@ -89,7 +89,7 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
                     className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
+                    
                   />
                 </div>
               </div>
@@ -106,7 +106,7 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
                     className="pl-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    required
+                    
                   />
                 </div>
               </div>

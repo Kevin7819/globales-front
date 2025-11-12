@@ -2,7 +2,7 @@
 // User and Authentication
 // ----------------------
 export interface User {
-  id: number;
+  UserId: number;
   email: string;
   role: string;
   token: string;

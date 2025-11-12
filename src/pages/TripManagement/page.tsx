@@ -364,7 +364,7 @@ export default function TripsPage() {
               onClick={handleOpenClaimModal}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Reclamar Viaje
+              Agregar viaje
             </Button>
           </div>
 
@@ -496,7 +496,7 @@ export default function TripsPage() {
                 onClick={handleOpenClaimModal}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Reclamar Mi Viaje
+                Agregar viaje
               </Button>
             </CardContent>
           </Card>
@@ -723,7 +723,7 @@ export default function TripsPage() {
           </div>
           <div>
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Reclamar Viaje
+              Agregar viaje
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
               Ingresa tu código de reserva
@@ -768,7 +768,7 @@ export default function TripsPage() {
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Reclamar Viaje
+                  Agregar viaje
                 </>
               )}
             </Button>

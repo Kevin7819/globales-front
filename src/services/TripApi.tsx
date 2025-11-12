@@ -68,7 +68,7 @@ claimTripByReservationCode: async (reservationCode: string): Promise<ClaimTripRe
       message: translateApiMessage(response.data.message || "Viaje reclamado exitosamente."),
     };
   } catch (error: any) {
-    console.error("[TripApi] Error al reclamar viaje:", error.response?.data || error.message);
+    console.error("[TripApi] Error al Agregar viaje:", error.response?.data || error.message);
 
     return {
       isSuccess: false,

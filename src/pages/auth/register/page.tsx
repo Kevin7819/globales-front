@@ -159,7 +159,7 @@ export default function RegisterPage() {
                     placeholder="Juan"
                     value={form.firstName}
                     onChange={handleChange}
-                    required
+                    
                   />
                 </div>
                 <div className="space-y-2">
@@ -169,7 +169,7 @@ export default function RegisterPage() {
                     placeholder="Pérez"
                     value={form.lastName}
                     onChange={handleChange}
-                    required
+                    
                   />
                 </div>
               </div>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                     className="pl-10"
                     value={form.email}
                     onChange={handleChange}
-                    required
+                    
                   />
                 </div>
               </div>
@@ -203,7 +203,7 @@ export default function RegisterPage() {
                     className="pl-10"
                     value={form.password}
                     onChange={handleChange}
-                    required
+                    
                   />
                 </div>
               </div>
@@ -220,7 +220,7 @@ export default function RegisterPage() {
                     className="pl-10"
                     value={form.confirmPassword}
                     onChange={handleChange}
-                    required
+                    
                   />
                 </div>
               </div>
@@ -237,7 +237,7 @@ export default function RegisterPage() {
                     onChange={handleChange}
                     max={today} // <-- no permitir fechas futuras
                     className="pl-10"
-                    required
+                    
                   />
                 </div>
               </div>
