@@ -1,206 +1,30 @@
-import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
-import { Button } from "../../components/ui/Button"
+import { Link } from "react-router-dom";
+import { Button } from "../../components/ui/Button";
+import { StatCard } from "../../components/ui/StatCard";
 import LoadingSkeleton from "../../components/LoadingSkeleton";
-import { Card, CardContent, CardDescription ,CardHeader, CardTitle } from "../../components/ui/Card"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/Avatar"
-import { MapPin, Calendar, Shield, Heart, MessageCircle, Bell, Settings, Plane, Globe, LogOut, Users, TrendingUp, Award, Clock, Luggage, Briefcase, Palette, Compass, Zap, Scale } from "lucide-react"
-import { UserApi } from "../../services/UserApi"
-import type { User } from "../../types"
-import { TripApi } from "../../services/TripApi"
-import type { Trip } from "../../types"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/Card";
+import { Avatar, AvatarFallback } from "../../components/ui/Avatar";
+import { 
+  MapPin, Shield, Heart, MessageCircle, Bell, Settings, Plane, 
+  Globe, Users, Award, Clock, Briefcase, Compass, Zap, Palette, Scale 
+} from "lucide-react";
 import UserNotFound from "../../components/UserNotFound";
 import QuickActionCard from "../../components/ui/QuickActionCard";
+import { useDashboard } from "../../hooks/useDashboard";
+import { TripCard } from "../../components/ui/TripCard";
+import { EmptyTripsState } from "../../components/ui/EmptyTripsState";
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null)
-  const [trips, setTrips] = useState<Trip[]>([])
-  const [loading, setLoading] = useState(true)
-  const [alerts, setAlerts] = useState<any[]>([])
+  const { user, trips, loading, stats, userInitials } = useDashboard();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const storedUserId = localStorage.getItem("userId")
-        if (!storedUserId) {
-          throw new Error("No user ID found in localStorage")
-        }
-
-        // Fetch user data
-        const userData = await UserApi.getCurrentUser(Number(storedUserId))
-        setUser(userData)
-
-        // Fetch trips data
-        const tripsData = await TripApi.getTrips()
-        setTrips(tripsData)
-
-      } catch (err) {
-        console.error("Failed to fetch data:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchData()
-  }, [])
-
-  const stats = {
-    // Viajes futuros
-    upcomingTrips: trips.filter(trip => new Date(trip.departureDate) > new Date()).length,
-    
-    // todos los viajes
-    totalTripsBasedOnAccount: trips.length,
-    
-    // Tipo de Viajero basado en patrones de viaje
-    travelerType: (() => {
-      const businessTrips = trips.filter(t => t.type?.toLowerCase() === 'business').length;
-      const leisureTrips = trips.filter(t => t.type?.toLowerCase() === 'leisure').length;
-      const familyTrips = trips.filter(t => t.type?.toLowerCase() === 'family').length;
-      const total = trips.length;
-      
-      if (total === 0) return { 
-        type: "Explorador Novato", 
-        description: "Comienza tu aventura",
-        color: "from-gray-600 to-gray-700",
-        icon: Users
-      };
-      //sacar porcentaje
-      const businessPercent = (businessTrips / total) * 100;
-      const leisurePercent = (leisureTrips / total) * 100;
-      const familyPercent = (familyTrips / total) * 100;
-      
-      if (businessPercent >= 60) return { 
-        type: "Ejecutivo Global", 
-        description: `${Math.round(businessPercent)}% negocios`,
-        color: "from-blue-600 to-blue-700",
-        icon: Briefcase
-      };
-      
-      if (leisurePercent >= 60) return { 
-        type: "Aventurero Cultural", 
-        description: `${Math.round(leisurePercent)}% turismo`,
-        color: "from-green-600 to-green-700", 
-        icon: Compass
-      };
-      
-      if (familyPercent >= 60) return { 
-        type: "Viajero Familiar", 
-        description: `${Math.round(familyPercent)}% familia`,
-        color: "from-purple-600 to-purple-700",
-        icon: Users
-      };
-      
-      // Aversh que combinacion tiene
-      const types = [];
-      if (businessPercent > 25) types.push("negocios");
-      if (leisurePercent > 25) types.push("turismo");
-      if (familyPercent > 25) types.push("familia");
-      
-      if (types.length === 3) return {
-        type: "Viajero Versátil",
-        description: "Equilibrado en todos los tipos",
-        color: "from-indigo-600 to-purple-600",
-        icon: Globe
-      };
-      
-      if (types.length === 2) {
-        const isBusinessLeisure = types.includes("negocios") && types.includes("turismo");
-        const isBusinessFamily = types.includes("negocios") && types.includes("familia");
-        const isLeisureFamily = types.includes("turismo") && types.includes("familia");
-        
-        if (isBusinessLeisure) 
-        return {
-          type: "Profesional Dinámico",
-          description: "Negocios y placer",
-          color: "from-cyan-600 to-blue-600",
-          icon: Zap
-        };
-        
-        if (isBusinessFamily) 
-        return {
-          type: "Equilibrista Familiar",
-          description: "Trabajo y familia",
-          color: "from-orange-600 to-red-600",
-          icon: Scale
-        };
-
-        if (isLeisureFamily) 
-        return {
-          type: "Aventurero Familiar",
-          description: "Turismo y familia",
-          color: "from-orange-600 to-red-600",
-          icon: Scale
-        };
-        
-        return {
-          type: "Explorador Balanceado",
-          description: types.join(" + "),
-          color: "from-teal-600 to-green-600",
-          icon: Palette
-        };
-      }
-      
-      return {
-        type: "Viajero Único",
-        description: "Estilo personalizado",
-        color: "from-pink-600 to-rose-600",
-        icon: Heart
-      };
-    })(),
-    
-    // Próximo viaje 
-    nextTrip: (() => {
-      const upcoming = trips
-        .filter(trip => new Date(trip.departureDate) > new Date())
-        .sort((a, b) => new Date(a.departureDate).getTime() - new Date(b.departureDate).getTime())[0];
-      
-      if (!upcoming) return null;
-      
-      const today = new Date();
-      const departure = new Date(upcoming.departureDate);
-      const diffTime = departure.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      return {
-        ...upcoming,
-        daysUntil: diffDays,
-        status: diffDays === 0 ? "Hoy" : diffDays === 1 ? "Mañana" : `En ${diffDays} días`
-      };
-    })(),
-    
-    // Destinos únicos visitados
-    uniqueDestinations: new Set(trips.map(trip => trip.destination)).size,
-    
-    // Viajes por tipo
-    tripsByType: {
-      business: trips.filter(trip => trip.type?.toLowerCase() === 'business').length,
-      leisure: trips.filter(trip => trip.type?.toLowerCase() === 'leisure').length,
-      family: trips.filter(trip => trip.type?.toLowerCase() === 'family').length
-    }
-  };
-
-  // iniciales
-  const getUserInitials = (user: User) => {
-    if (user.UserName) {
-      return user.UserName
-        .split(" ")
-        .map(n => n[0])
-        .join("")
-        .toUpperCase()
-        .substring(0, 2);
-    }
-    return user.email.substring(0, 2).toUpperCase();
-  };
-
+  // Loading and error states
   if (loading) return <LoadingSkeleton />;
+  if (!user) return <UserNotFound />;
 
-  if (!user) return <UserNotFound />
-
-  const userInitials = getUserInitials(user);
   const TravelerTypeIcon = stats.travelerType.icon;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Welcome Section */}
@@ -221,50 +45,31 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Stats Overview con datos reales */}
+          {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Viajes Totales */}
-            <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4 shadow-lg min-h-[120px]">
-              <CardContent className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-blue-100 mb-1">Total de Viajes</CardDescription>
-                  <p className="text-3xl font-bold">{stats.totalTripsBasedOnAccount}</p>
-                  <p className="text-blue-200 text-xs mt-1">{stats.upcomingTrips} próximos</p>
-                </div>
-                <Plane className="h-8 w-8 text-blue-200" />
-              </CardContent>
-            </Card>
+            <StatCard
+              title="Total de Viajes"
+              value={stats.totalTripsBasedOnAccount}
+              description={`${stats.upcomingTrips} próximos`}
+              icon={<Plane className="h-14 w-14 text-blue-200" />}
+              gradient="from-blue-600 to-blue-700"
+            />
             
-            {/* Tipo de Viajero */}
-            <Card className={`bg-gradient-to-r ${stats.travelerType.color} text-white p-4 shadow-lg min-h-[120px]`}>
-              <CardContent className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-blue-100 mb-1">Tipo de Viajero</CardDescription>
-                  <p className="text-2xl font-bold">{stats.travelerType.type}</p>
-                  <p className="text-opacity-80 text-xs mt-1">{stats.travelerType.description}</p>
-                </div>
-                <TravelerTypeIcon className="h-8 w-8 text-opacity-80" />
-              </CardContent>
-            </Card>
+            <StatCard
+              title="Tipo de Viajero"
+              value={stats.travelerType.type}
+              description={stats.travelerType.description}
+              icon={<TravelerTypeIcon className="h-12 w-12 text-opacity-80" />}
+              gradient={stats.travelerType.color}
+            />
             
-            {/* Próximo Viaje */}
-            <Card className="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 shadow-lg min-h-[120px]">
-              <CardContent className="flex items-center justify-between">
-                <div>
-                  <CardDescription className="text-green-100 mb-1">
-                    {stats.nextTrip ? "Próximo Viaje" : "Sin Viajes Próximos"}
-                  </CardDescription>
-                  <p className="text-2xl font-bold">
-                    {stats.nextTrip ? stats.nextTrip.destination : "Planificar"}
-                  </p>
-                  <p className="text-green-200 text-xs mt-1">
-                    {stats.nextTrip ? stats.nextTrip.status : "Agrega tu primer viaje"}
-                  </p>
-                </div>
-                {stats.nextTrip ? <Clock className="h-8 w-8 text-green-200" /> : <Award className="h-8 w-8 text-green-200" />}
-              </CardContent>
-            </Card>
-
+            <StatCard
+              title={stats.nextTrip ? "Próximo Viaje" : "Sin Viajes Próximos"}
+              value={stats.nextTrip ? stats.nextTrip.destination : "Planificar"}
+              description={stats.nextTrip ? stats.nextTrip.status : "Agrega tu primer viaje"}
+              icon={stats.nextTrip ? <Clock className="h-14 w-14 text-green-200" /> : <Award className="h-14 w-14 text-green-200" />}
+              gradient="from-green-600 to-green-700"
+            />
           </div>
         </div>
 
@@ -290,59 +95,15 @@ export default function DashboardPage() {
               </div>
 
               {stats.upcomingTrips === 0 ? (
-                <Card className="border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 transition-colors">
-                  <CardContent className="p-12 text-center">
-                    <Plane className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                      No tienes viajes programados
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
-                      Comienza a planificar tu próxima aventura
-                    </p>
-                    <Button asChild>
-                      <Link to="/trips">Explorar Destinos</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <EmptyTripsState />
               ) : (
                 <div className="space-y-4">
                   {trips
                     .filter(trip => new Date(trip.departureDate) > new Date())
                     .slice(0, 3)
-                    .map((trip) => {
-                      const today = new Date();
-                      const departure = new Date(trip.departureDate);
-                      const diffDays = Math.ceil((departure.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-                      
-                      return (
-                        <Card key={trip.tripId} className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
-                          <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-4">
-                                <div className="bg-blue-100 dark:bg-blue-900/20 w-12 h-12 rounded-full flex items-center justify-center">
-                                  <MapPin className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold text-gray-900 dark:text-white">{trip.destination}</h3>
-                                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                                    {new Date(trip.departureDate).toLocaleDateString('es-ES')}
-                                    {trip.flightNumber && ` • ${trip.flightNumber}`}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className={`text-sm font-semibold ${
-                                  diffDays === 0 ? 'text-red-600' : 
-                                  diffDays <= 3 ? 'text-orange-500' : 'text-green-600'
-                                }`}>
-                                  {diffDays === 0 ? 'Hoy' : diffDays === 1 ? 'Mañana' : `En ${diffDays} días`}
-                                </span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
+                    .map((trip) => (
+                      <TripCard key={trip.tripId} trip={trip} />
+                    ))}
                 </div>
               )}
             </section>
@@ -374,8 +135,6 @@ export default function DashboardPage() {
                 />
               </div>
             </section>
-
-
           </div>
 
           {/* Sidebar */}
@@ -434,7 +193,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* Alerts */}
+            {/* Travel Summary */}
             <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg">
               <CardHeader className="pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
@@ -465,11 +224,9 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-
           </div>
         </div>
       </main>
-
     </div>
-  )
+  );
 }

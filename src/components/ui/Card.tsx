@@ -42,7 +42,7 @@ export function CardTitle({ className, children }: React.HTMLAttributes<HTMLHead
 // Card Description
 export function CardDescription({ className, children }: React.HTMLAttributes<HTMLParagraphElement>) {
   return (
-    <p className={clsx("text-sm text-gray-500 dark:text-gray-400", className)}>{children}</p>
+    <p className={clsx("text-sm text-white dark:text-gray-400", className)}>{children}</p>
   )
 }
 

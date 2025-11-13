@@ -5,6 +5,7 @@ import Dashboard from "./pages/dashboard/page";
 import Trips from "./pages/TripManagement/page";
 import Profile from "./pages/profile/page";
 import TravelGuides from "./pages/TravelGuides/page";
+import './styles/globals.css'; 
 
 function App() {
   return (
