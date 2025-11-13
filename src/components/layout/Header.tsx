@@ -101,9 +101,6 @@ export default function Header() {
             <Link to="/travel-guides" className={`${linkClass("/travel-guides")} font-medium hover:scale-105 transition-transform`}>
               Guías de Viaje
             </Link>
-            <Link to="/flights" className={`${linkClass("/flights")} font-medium hover:scale-105 transition-transform`}>
-              Buscar Vuelos
-            </Link>
           </nav>
 
           {/* User Actions */}
@@ -148,13 +145,6 @@ export default function Header() {
                   <Link to="/profile" className="flex items-center gap-3 w-full px-3 py-2 text-sm">
                     <UserIcon className="h-4 w-4 text-gray-500" />
                     Mi Perfil
-                  </Link>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem asChild className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700">
-                  <Link to="/settings" className="flex items-center gap-3 w-full px-3 py-2 text-sm">
-                    <Settings className="h-4 w-4 text-gray-500" />
-                    Configuración
                   </Link>
                 </DropdownMenuItem>
 

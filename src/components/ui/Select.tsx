@@ -14,7 +14,7 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-
+    // Puedes agregar lógica aquí si es necesario
   }, [value])
 
   const handleSelect = (val: string) => {
@@ -27,7 +27,6 @@ export function Select({ children, value, onValueChange, disabled }: SelectProps
       if (!React.isValidElement(child)) return child
       const element = child as SelectElement
       const props = element.props || {}
-
 
       if (element.type.displayName === "SelectTrigger") {
         return React.cloneElement(element, { 
@@ -83,7 +82,7 @@ export function SelectTrigger({ children, isOpen, setIsOpen, className }: Select
       onClick={() => {
         setIsOpen && setIsOpen(!isOpen)
       }}
-      className={`border p-2 rounded cursor-pointer bg-white ${className || ""}`}
+      className={`border p-2 rounded cursor-pointer ${className || ""}`}
     >
       {children}
     </div>
@@ -96,10 +95,18 @@ export function SelectValue({ selectedValue, placeholder }: { selectedValue?: st
 }
 SelectValue.displayName = "SelectValue"
 
-export function SelectContent({ children, isOpen }: { children: ReactNode; isOpen?: boolean }) {
+export function SelectContent({ 
+  children, 
+  isOpen, 
+  className 
+}: { 
+  children: ReactNode; 
+  isOpen?: boolean;
+  className?: string;
+}) {
   if (!isOpen) return null
   return (
-    <div className="border mt-1 rounded bg-white absolute w-full z-10 max-h-60 overflow-y-auto">
+    <div className={`border mt-1 rounded bg-white absolute w-full z-10 max-h-60 overflow-y-auto ${className || ""}`}>
       {children}
     </div>
   )
@@ -111,18 +118,20 @@ export function SelectItem({
   children,
   onSelect,
   selectedValue,
+  className
 }: {
   value: string
   children: ReactNode
   onSelect?: (value: string) => void
   selectedValue?: string
+  className?: string
 }) {
   return (
     <div
       onClick={() => {
         if (onSelect) onSelect(value)
       }}
-      className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedValue === value ? "bg-blue-100 font-medium" : ""}`}
+      className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedValue === value ? "bg-blue-100 font-medium" : ""} ${className || ""}`}
     >
       {children}
     </div>

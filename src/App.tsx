@@ -6,6 +6,7 @@ import Trips from "./pages/TripManagement/page";
 import Profile from "./pages/profile/page";
 import TravelGuides from "./pages/TravelGuides/page";
 import NotificationProvider from "./components/Notification/NotificationProvider";
+import './styles/globals.css'; 
 
 function App() {
   return (
