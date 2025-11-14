@@ -12,11 +12,14 @@ import {
 import { Globe, Bell, Settings, User as UserIcon, LogOut, Plane } from "lucide-react";
 import { UserApi } from "../../services/UserApi";
 import type { User } from "../../types";
+import ConfirmModal from "../../components/Modal/ConfirmModal";
 
 export default function Header() {
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
 
   // Fetch current user from API
   useEffect(() => {
@@ -66,6 +69,9 @@ export default function Header() {
     location.pathname.startsWith(path)
       ? "text-blue-600 font-semibold border-b-2 border-blue-600 pb-1 transition-all duration-200"
       : "text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200";
+
+
+
 
   return (
     <header className="bg-white dark:bg-gray-900 shadow-lg border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
@@ -145,7 +151,7 @@ export default function Header() {
                 <DropdownMenuSeparator className="bg-gray-200 dark:bg-gray-600" />
 
                 <DropdownMenuItem
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="cursor-pointer text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-3 px-3 py-2 text-sm"
                 >
                   <LogOut className="h-4 w-4" />
@@ -153,6 +159,16 @@ export default function Header() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <ConfirmModal
+              isOpen={showLogoutModal}
+              title="¿Cerrar sesión?"
+              message="Se cerrará tu sesión actual. Tendrás que iniciar sesión nuevamente para continuar."
+              confirmText="cerrar sesión"
+              cancelText="Cancelar"
+              onConfirm={handleLogout}
+              onCancel={() => setShowLogoutModal(false)}
+            />
           </div>
         </div>
 

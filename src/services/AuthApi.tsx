@@ -25,12 +25,12 @@ export const AuthApi = {
     birthDate: Date
   ) => {
     const response = await Api.post("/Auth/Register", {
-      UserName: userName,
-      Email: email,
-      Password: password,
-      CountryOfOrigin: countryOfOrigin,
-      PreferredLanguage: preferredLanguage,
-      BirthDate: birthDate.toISOString().split("T")[0],
+        name: userName, // campo correcto
+        email,          // en minúsculas
+        password,
+        countryOfOrigin,
+        preferredLanguage,
+        birthDate: birthDate.toISOString().split("T")[0],
     });
 
     if (response.data.isSuccess && response.data.user?.token) {

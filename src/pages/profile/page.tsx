@@ -2,7 +2,10 @@ import { useEffect, useState } from "react"
 import { UserApi } from "../../services/UserApi"
 import type { User } from "../../types"
 import { fetchCountries, fetchLanguages } from "../../services/LocationApi"
-import { User, Mail, MapPin, Globe, Edit3, Save, X, LogOut, Plane } from "lucide-react"
+import { useNotification } from "../../components/Notification/useNotification";
+import ConfirmModal from "../../components/Modal/ConfirmModal";
+import { Mail, MapPin, Globe, Edit3, Save, X, LogOut, Plane, User2 } from "lucide-react"
+
 
 export default function ProfilePage() {
     const [isEditing, setIsEditing] = useState(false)
@@ -16,6 +19,11 @@ export default function ProfilePage() {
 
     const [countries, setCountries] = useState<string[]>([])
     const [languages, setLanguages] = useState<string[]>([])
+
+    const travelTypes = ["Negocios", "Turismo", "Estudios", "Familia", "Médico", "Otro"]
+
+    const { showNotification } = useNotification();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
 
     useEffect(() => {
       const loadData = async () => {
@@ -66,31 +74,72 @@ export default function ProfilePage() {
       setSuccess("")
     }
 
-    const handleSave = async () => {
-      if (!editedUser || !user) return
-      setIsSaving(true)
-      setError("")
-      setSuccess("")
+ const handleSave = async () => {
+  if (!editedUser || !user) return;
 
-      try {
-        await UserApi.updateUser(user.id, editedUser)
-        setUser({ ...editedUser })
-        setIsEditing(false)
-        setSuccess("Perfil actualizado correctamente")
-        setTimeout(() => setSuccess(""), 3000)
-      } catch (err: any) {
-        console.error("Error updating profile:", err)
-        setError(err.message || "Error al actualizar el perfil")
-      } finally {
-        setIsSaving(false)
-      }
+  setIsSaving(true);
+  setError("");
+  setSuccess("");
+
+  try {
+    const userId = Number(localStorage.getItem("userId"));
+    console.log("🧾 ID del usuario:", userId);
+
+    if (!userId) {
+      showNotification("No se encontró la sesión activa del usuario.", "error");
+      return;
     }
+
+    // Validaciones simples antes del envío
+    if (!editedUser.UserName || editedUser.UserName.trim().length < 2) {
+      showNotification("El nombre debe tener al menos 2 caracteres", "warning");
+      return;
+    }
+
+    if (!editedUser.email || !editedUser.email.includes("@")) {
+      showNotification("El correo electrónico no es válido", "warning");
+      return;
+    }
+
+    // Construir los datos del DTO (sin id)
+    const updatedData = {
+      name: editedUser.UserName?.trim() || "",
+      email: editedUser.email?.trim() || "",
+      countryOfOrigin: editedUser.countryOfOrigin?.trim() || null,
+      preferredLanguage: editedUser.preferredLanguage?.trim() || null,
+      birthDate: editedUser.birthDate
+        ? editedUser.birthDate.split("T")[0]
+        : null,
+      role: editedUser.role || "Passenger",
+    };
+
+    await UserApi.updateUser(userId, editedUser)
+
+    setUser((prev) => ({ ...prev, ...editedUser }));
+    setIsEditing(false);
+
+    showNotification("Perfil actualizado con exito", "success");
+  } catch (err: any) {
+    console.error("Error updating profile:", err.response?.data || err.message);
+
+    const errorMessage =
+      err.response?.data?.title ||
+      err.response?.data?.errors?.[Object.keys(err.response?.data?.errors || {})[0]]?.[0] ||
+      "Error al actualizar el perfil";
+
+    showNotification(errorMessage, "error");
+  } finally {
+    setIsSaving(false);
+  }
+};
+
 
     const handleLogout = () => {
       localStorage.removeItem("token")
       localStorage.removeItem("userId")
       localStorage.removeItem("role")
-      window.location.href = "/login"
+      showNotification("Sesión cerrada correctamente", "info");
+      window.location.href = "/login";
     }
 
     const handleInputChange = (field: keyof User, value: any) => {
@@ -191,13 +240,50 @@ export default function ProfilePage() {
                     {userInitials}
                   </div>
                   <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
-                    <User className="w-4 h-4 text-white" />
+                    <User2 className="w-4 h-4 text-white" />
                   </div>
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">{user.UserName || "Viajero Orbis"}</h2>
-                <p className="text-gray-600 mb-4 flex items-center justify-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  {user.email}
+              </div>
+            </div>
+
+            {/* Logout Card */}
+            <div className="bg-white rounded-lg shadow-sm border p-6 mt-6">
+              <h3 className="font-semibold mb-2 text-gray-900">Sesión</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Cierra sesión de forma segura
+              </p>
+
+              {/* Botón que abre el modal */}
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="w-full border border-red-200 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 flex items-center justify-center gap-2"
+              >
+                Cerrar Sesión
+              </button>
+
+              {/* Modal de confirmación */}
+              <ConfirmModal
+                isOpen={showLogoutModal}
+                title="¿Cerrar sesión?"
+                message="Se cerrará tu sesión actual. Tendrás que iniciar sesión nuevamente para continuar."
+                confirmText="cerrar sesión"
+                cancelText="Cancelar"
+                onConfirm={handleLogout}
+                onCancel={() => setShowLogoutModal(false)}
+              />
+            </div>
+          </div>
+
+          {/* Profile Information */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Personal Information */}
+            <div className="bg-white rounded-lg shadow-sm border">
+              <div className="p-6 border-b">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Información Personal
+                </h3>
+                <p className="text-gray-600 text-sm mt-1">
+                  Datos básicos de tu perfil
                 </p>
 
                 {/* Stats */}
@@ -222,7 +308,7 @@ export default function ProfilePage() {
               {/* Quick Actions */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
                 <h3 className="font-semibold mb-4 text-gray-900 flex items-center gap-2">
-                  <User className="h-5 w-5 text-blue-600" />
+                  <User2 className="h-5 w-5 text-blue-600" />
                   Acciones Rápidas
                 </h3>
                 <div className="space-y-3">
@@ -262,7 +348,7 @@ export default function ProfilePage() {
               <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                 <div className="p-6 border-b border-gray-200">
                   <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
-                    <User className="h-6 w-6 text-blue-600" />
+                    <User2 className="h-6 w-6 text-blue-600" />
                     Información Personal
                   </h3>
                   <p className="text-gray-600 text-sm mt-1 ml-9">
@@ -273,7 +359,7 @@ export default function ProfilePage() {
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                        <User className="h-4 w-4" />
+                        <User2 className="h-4 w-4" />
                         Nombre completo
                       </label>
                       {isEditing ? (

@@ -10,6 +10,7 @@ import { AnimatedPlanes } from "../../../components/ui/AnimatedPlanes";
 import { AnimatedBackground } from "../../../components/ui/AnimatedBackgroundAuth";
 import { AuthLogo } from "../../../components/ui/AuthLogo";
 import { AuthCard } from "../../../components/ui/AuthCard";
+import { useNotification } from "../../../components/Notification/useNotification";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -17,27 +18,48 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { showNotification } = useNotification();
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
+const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    try {
-      const result = await AuthApi.login(email, password);
+  // ✅ Validaciones antes de enviar
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    showNotification("El formato del correo no es válido.", "error");
+    return;
+  }
 
-      if (result.isSuccess) {
-        localStorage.setItem("token", result.user.token);
-        localStorage.setItem("userId", result.user.id.toString());
-        navigate("/dashboard");
-      } else {
-        alert(result.message);
-      }
-    } catch (err) {
-      alert("Error al iniciar sesión");
-    } finally {
-      setIsLoading(false);
+  if (!email || !password) {
+    showNotification("Por favor completa todos los campos.", "error");
+    return;
+  }
+
+  try {
+
+    const result = await AuthApi.login(email, password);
+    console.log("Respuesta del API:", result);
+
+    // Login exitoso
+    if (result.isSuccess) {
+      showNotification(`Bienvenido de nuevo, ${result.user.name}`, "success");
+
+      localStorage.setItem("token", result.user.token);
+      localStorage.setItem("userId", result.user.id.toString());
+
+      setTimeout(() => navigate("/dashboard"), 3000);
+      return;
     }
-  };
+
+    showNotification(result.message || "Credenciales incorrectas.", "error");
+
+  } catch (err) {
+    console.error("Error al llamar al API:", err);
+    showNotification("Error al conectar con el servidor.", "error");
+  }
+  
+};
+
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">

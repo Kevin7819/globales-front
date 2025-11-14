@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 const Api: AxiosInstance = axios.create({
-  baseURL: "http://localhost:5089/api",
+  baseURL: "https://localhost:7273/api",
   headers: { "Content-Type": "application/json" },
   timeout: 10000,
 });

@@ -2,7 +2,7 @@
 // User and Authentication
 // ----------------------
 export interface User {
-  id: number;
+  UserId: number;
   email: string;
   role: string;
   token: string;
@@ -38,8 +38,9 @@ export interface Trip {
 }
 
 export interface ClaimTripResponse {
+  isSuccess: boolean;
   message: string;
-  trip: Trip;
+  data?: any;
 }
 
 // ----------------------

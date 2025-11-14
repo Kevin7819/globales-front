@@ -12,9 +12,11 @@ import { TravelGuideApi } from "../../services/travelGuideApi";
 import type { User } from "../../types";
 import type { Trip, CountryInfo, QuickGuideResponse, SafetyGuide, HealthGuide, CultureGuide } from "../../types";
 import { CountryGuideTabs } from "../../components/ui/CountryGuideTabs";
+import { useNotification } from "../../components/Notification/useNotification";
+
 
 const capitalizeFirstLetter = (str: string) =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
 
 // Componente para las guías de viaje
 
@@ -159,6 +161,11 @@ export default function TripsPage() {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+
+   // paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const tripsPerPage = 6;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -172,6 +179,8 @@ export default function TripsPage() {
 
   // Nuevo estado para controlar qué sección mostrar en el modal
   const [modalSection, setModalSection] = useState<'details' | 'guide'>('details');
+
+  const { showNotification } = useNotification();
 
   useEffect(() => {
     async function fetchUser() {
@@ -211,6 +220,12 @@ export default function TripsPage() {
       fetchTrips();
     }
   }, [fetchTrips, location.state]);
+
+  // --- Cálculo de la paginación ---
+  const indexOfLastTrip = currentPage * tripsPerPage;
+  const indexOfFirstTrip = indexOfLastTrip - tripsPerPage;
+  const currentTrips = trips.slice(indexOfFirstTrip, indexOfLastTrip);
+
 
   //datos a mostrar
   const stats = {
@@ -316,24 +331,27 @@ export default function TripsPage() {
   };
 
   const handleClaimTrip = async () => {
-    if (!reservationCode.trim()) {
-      setClaimError("Por favor ingresa un código de reserva");
-      return;
-    }
+  if (!reservationCode.trim()) {
+    showNotification("Por favor ingresa un código de reserva.", "error");
+    return;
+  }
 
-    setClaimLoading(true);
-    setClaimError("");
+  setClaimLoading(true);
 
-    try {
-      const response = await TripApi.claimTripByReservationCode(reservationCode.trim());
-      handleCloseClaimModal();
-      fetchTrips(); // Recargar la lista de viajes
-    } catch (err: any) {
-      setClaimError(err.response?.data?.message || "Error al reclamar el viaje. Verifica el código.");
-    } finally {
-      setClaimLoading(false);
-    }
-  };
+  const response = await TripApi.claimTripByReservationCode(reservationCode);
+
+  if (response.isSuccess) {
+    showNotification(response.message, "success");
+    setReservationCode("");
+    handleCloseClaimModal();
+  } else {
+    showNotification(response.message, "error");
+  }
+
+  setClaimLoading(false);
+};
+
+
 
   const mostCommonType = getMostCommonTripType();
 
@@ -357,7 +375,7 @@ export default function TripsPage() {
               onClick={handleOpenClaimModal}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Reclamar Viaje
+              Agregar viaje
             </Button>
           </div>
 
@@ -489,7 +507,7 @@ export default function TripsPage() {
                 onClick={handleOpenClaimModal}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Reclamar Mi Viaje
+                Agregar viaje
               </Button>
             </CardContent>
           </Card>
@@ -497,8 +515,9 @@ export default function TripsPage() {
 
         {/* Trips Grid */}
         {!loading && !error && trips.length > 0 && (
+         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((trip) => {
+            {currentTrips.map((trip) => {
               const tripStatus = getDaysUntilTrip(trip.departureDate);
               
               return (
@@ -580,7 +599,44 @@ export default function TripsPage() {
               );
             })}
           </div>
+
+           {/* Paginacion*/}
+              <div className="flex justify-center items-center gap-3 mt-6">
+                <button
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg border ${
+                    currentPage === 1
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  Anterior 
+                </button>
+
+                <span className="text-sm font-semibold">
+                  Página {currentPage} de {Math.ceil(trips.length / tripsPerPage)}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={currentPage >= Math.ceil(trips.length / tripsPerPage)}
+                  className={`px-4 py-2 rounded-lg border ${
+                    currentPage >= Math.ceil(trips.length / tripsPerPage)
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  Siguiente 
+                </button>
+              </div>
+              {/* Paginacion */}
+              
+         </>
+
         )}
+
+        
 
       </main>
 
@@ -607,32 +663,35 @@ export default function TripsPage() {
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Botones de navegación */}
-          <div className="flex gap-2">
-            {modalSection === 'guide' ? (
+        {/* Botón de navegación fuera del header */}
+          {modalSection === "guide" && (
+            <div className="mb-4">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setModalSection('details')}
+                size="default"
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
+                onClick={() => setModalSection("details")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver a Detalles
               </Button>
-            ) : (
-              selectedTrip && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setModalSection('guide')}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Ver Guía
-                </Button>
-              )
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+
+          {modalSection === "details" && (
+            <div className="mb-4">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => setModalSection("guide")}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Ver Guía
+              </Button>
+            </div>
+          )}
 
         {modalSection === 'details' ? (
           /* Sección de Detalles del Viaje */
@@ -716,7 +775,7 @@ export default function TripsPage() {
           </div>
           <div>
             <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
-              Reclamar Viaje
+              Agregar viaje
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-sm">
               Ingresa tu código de reserva
@@ -747,12 +806,6 @@ export default function TripsPage() {
             </p>
           </div>
 
-          {claimError && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-              <p className="text-red-600 dark:text-red-400 text-sm">{claimError}</p>
-            </div>
-          )}
-
           <div className="flex gap-3 pt-2">
             <Button
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
@@ -767,7 +820,7 @@ export default function TripsPage() {
               ) : (
                 <>
                   <Plus className="h-4 w-4 mr-2" />
-                  Reclamar Viaje
+                  Agregar viaje
                 </>
               )}
             </Button>
