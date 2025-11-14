@@ -76,6 +76,17 @@ export default function RegisterPage() {
       showNotification("El apellido debe tener al menos 2 caracteres", "warning")
       return
     }
+    if (!form.email.trim()) {
+      showNotification("El correo electrónico es obligatorio", "warning");
+      return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(form.email.trim())) {
+      showNotification("Ingrese un correo electrónico válido", "warning");
+      return;
+    }
     if (form.password.length < 6) {
       showNotification("La contraseña debe tener al menos 6 caracteres", "warning")
       return
@@ -197,7 +208,6 @@ export default function RegisterPage() {
                 className="pl-11 h-12 rounded-xl bg-white/20 border-white/30 text-gray-800 font-medium placeholder:text-gray-600 focus:border-white focus:ring-2 focus:ring-white/50 transition-all drop-shadow-sm"
                 value={form.email}
                 onChange={handleChange}
-                required
               />
             </div>
           </div>
@@ -214,7 +224,7 @@ export default function RegisterPage() {
                 className="pl-11 pr-11 h-12 rounded-xl bg-white/20 border-white/30 text-gray-800 font-medium placeholder:text-gray-600 focus:border-white focus:ring-2 focus:ring-white/50 transition-all drop-shadow-sm"
                 value={form.password}
                 onChange={handleChange}
-                required
+                
               />
               <button
                 type="button"
@@ -238,7 +248,7 @@ export default function RegisterPage() {
                 className="pl-11 pr-11 h-12 rounded-xl bg-white/20 border-white/30 text-gray-800 font-medium placeholder:text-gray-600 focus:border-white focus:ring-2 focus:ring-white/50 transition-all drop-shadow-sm"
                 value={form.confirmPassword}
                 onChange={handleChange}
-                required
+                
               />
               <button
                 type="button"
@@ -262,7 +272,7 @@ export default function RegisterPage() {
                 onChange={handleChange}
                 max={today}
                 className="pl-11 h-12 rounded-xl bg-white/20 border-white/30 text-gray-800 font-medium placeholder:text-gray-600 focus:border-white focus:ring-2 focus:ring-white/50 transition-all relative z-0 [color-scheme:dark] drop-shadow-sm"
-                required
+                
               />
             </div>
           </div>

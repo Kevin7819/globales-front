@@ -663,32 +663,35 @@ export default function TripsPage() {
               </p>
             </div>
           </div>
+        </div>
 
-          {/* Botones de navegación */}
-          <div className="flex gap-2">
-            {modalSection === 'guide' ? (
+        {/* Botón de navegación fuera del header */}
+          {modalSection === "guide" && (
+            <div className="mb-4">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setModalSection('details')}
+                size="default"
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
+                onClick={() => setModalSection("details")}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Volver a Detalles
               </Button>
-            ) : (
-              selectedTrip && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setModalSection('guide')}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Ver Guía
-                </Button>
-              )
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+
+          {modalSection === "details" && (
+            <div className="mb-4">
+              <Button
+                variant="outline"
+                size="default"
+                onClick={() => setModalSection("guide")}
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-all"
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Ver Guía
+              </Button>
+            </div>
+          )}
 
         {modalSection === 'details' ? (
           /* Sección de Detalles del Viaje */
