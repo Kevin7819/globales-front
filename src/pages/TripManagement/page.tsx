@@ -161,6 +161,11 @@ export default function TripsPage() {
   const location = useLocation();
   const [user, setUser] = useState<User | null>(null);
   const [trips, setTrips] = useState<Trip[]>([]);
+
+   // paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const tripsPerPage = 6;
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
@@ -215,6 +220,12 @@ export default function TripsPage() {
       fetchTrips();
     }
   }, [fetchTrips, location.state]);
+
+  // --- Cálculo de la paginación ---
+  const indexOfLastTrip = currentPage * tripsPerPage;
+  const indexOfFirstTrip = indexOfLastTrip - tripsPerPage;
+  const currentTrips = trips.slice(indexOfFirstTrip, indexOfLastTrip);
+
 
   //datos a mostrar
   const stats = {
@@ -504,8 +515,9 @@ export default function TripsPage() {
 
         {/* Trips Grid */}
         {!loading && !error && trips.length > 0 && (
+         <>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trips.map((trip) => {
+            {currentTrips.map((trip) => {
               const tripStatus = getDaysUntilTrip(trip.departureDate);
               
               return (
@@ -587,7 +599,44 @@ export default function TripsPage() {
               );
             })}
           </div>
+
+           {/* Paginacion*/}
+              <div className="flex justify-center items-center gap-3 mt-6">
+                <button
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg border ${
+                    currentPage === 1
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  Anterior 
+                </button>
+
+                <span className="text-sm font-semibold">
+                  Página {currentPage} de {Math.ceil(trips.length / tripsPerPage)}
+                </span>
+
+                <button
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  disabled={currentPage >= Math.ceil(trips.length / tripsPerPage)}
+                  className={`px-4 py-2 rounded-lg border ${
+                    currentPage >= Math.ceil(trips.length / tripsPerPage)
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                  }`}
+                >
+                  Siguiente 
+                </button>
+              </div>
+              {/* Paginacion */}
+              
+         </>
+
         )}
+
+        
 
       </main>
 
